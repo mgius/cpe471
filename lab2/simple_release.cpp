@@ -10,11 +10,13 @@ int GH;
 //current mouse position in pixel coordinate
 int x;
 int y;
+
 //a structure to store 2D points  - this could also be a class
 typedef struct vector2 {
   float x;
   float y;
 } vector2;
+
 //an array to store ten 2D points
 vector2 ten_pts[10];
 //keep track of the number of points stored thus far
@@ -23,6 +25,13 @@ int num_pts;
 //mode ==0 means draw square otherwise draw points
 int mode;
 
+inline float p2w_x(int) {
+
+}
+
+inline float p2w_y(int) {
+
+}
 //helper drawing routines
 void draw_square() {
   glBegin(GL_POLYGON);
@@ -98,6 +107,15 @@ void keyboard(unsigned char key, int x, int y ){
   }
 }
 
+void reshape( GLsizei w, GLsizei h) {
+   GW = w;
+   GH = h;
+   printf("new window size: %d, %d\n", w, h);
+   glViewport(0,0,w,h); // set viewport
+   glLoadIdentity(); // ?
+   gluOrtho2D(-(float)w/h, (float)w/h, -1, 1);
+}
+
 int main( int argc, char** argv ){
 
 	glutInit( &argc, argv );
@@ -116,6 +134,7 @@ int main( int argc, char** argv ){
   glutMouseFunc( mouse );
   glutMotionFunc( mouseMove );
   glutKeyboardFunc( keyboard );
+  glutReshapeFunc( reshape );
 
 	glutMainLoop();
 }
