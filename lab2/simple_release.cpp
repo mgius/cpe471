@@ -25,12 +25,14 @@ int num_pts;
 //mode ==0 means draw square otherwise draw points
 int mode;
 
-inline float p2w_x(int) {
-
+#define WorldW 2.0
+#define WorldH 2.0
+inline float p2w_x(float w) {
+   return WorldW / GW * w - WorldW / 2;
 }
 
-inline float p2w_y(int) {
-
+inline float p2w_y(float h) {
+   return -1 * (WorldH / GH * h - WorldH / 2);
 }
 //helper drawing routines
 void draw_square() {
@@ -74,10 +76,10 @@ void display() {
 void mouse(int button, int state, int x, int y) {
   if (button == GLUT_LEFT_BUTTON) {
     if (state == GLUT_DOWN) { /* if the left button is clicked */
-      printf("mouse clicked at %d %d\n", x, y);
+      printf("mouse clicked at %d %d (%f, %f)\n", x, y, p2w_x(x), p2w_y(y) );
       if (num_pts < 10) {
-        ten_pts[num_pts].x = x;
-        ten_pts[num_pts].y = y;
+        ten_pts[num_pts].x = p2w_x(x);
+        ten_pts[num_pts].y = p2w_y(y);
         num_pts++;
         glutPostRedisplay();
 
