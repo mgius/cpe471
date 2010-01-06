@@ -21,7 +21,7 @@ typedef struct vector2 {
 
 //an array to store ten 2D points
 //vector2 ten_pts[10];
-std::vector<vector2 *> pts;
+std::vector<vector2> pts;
 //keep track of the number of points stored thus far
 //keep track of which drawing mode we are in points or square
 //mode ==0 means draw square otherwise draw points
@@ -55,7 +55,7 @@ void draw_pts() {
   glBegin(GL_POINTS);
     glColor3f(0.5, 0.2, 0.8);
   for (int i=0; i<pts.size(); i++) {
-    glVertex2f(pts[i]->x, pts[i]->y);
+    glVertex2f(pts[i].x, pts[i].y);
     //printf("pt: %f %f\n", ten_pts[i].x, ten_pts[i].y);
   }
   glEnd();
@@ -79,9 +79,9 @@ void mouse(int button, int state, int x, int y) {
   if (button == GLUT_LEFT_BUTTON) {
     if (state == GLUT_DOWN) { /* if the left button is clicked */
       printf("mouse clicked at %d %d (%f, %f)\n", x, y, p2w_x(x), p2w_y(y) );
-        vector2 *temp = new vector2();
-        temp->x = p2w_x(x);
-        temp->y = p2w_y(y);
+        vector2 temp;
+        temp.x = p2w_x(x);
+        temp.y = p2w_y(y);
 
         pts.push_back(temp);
         glutPostRedisplay();
@@ -93,6 +93,12 @@ void mouse(int button, int state, int x, int y) {
 //the mouse move callback
 void mouseMove(int x, int y) {
   printf("mouse moved at %d %d\n", x, y);
+  vector2 temp;
+  temp.x = p2w_x(x);
+  temp.y = p2w_y(y);
+
+  pts.push_back(temp);
+  glutPostRedisplay();
 }
 
 //the keyboard callback
@@ -107,6 +113,11 @@ void keyboard(unsigned char key, int x, int y ){
       break;
     case 'h' : case 'H' :
       printf("hello!\n");
+      break;
+    case 'c' : case 'C' :
+      printf("Clearing points\n");
+      pts.clear();
+      glutPostRedisplay();
       break;
   }
 }
