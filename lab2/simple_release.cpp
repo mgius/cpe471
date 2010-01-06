@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <vector>
+
 //global variables - necessary evil when using GLUT
 //global width and height
 int GW;
@@ -18,9 +20,9 @@ typedef struct vector2 {
 } vector2;
 
 //an array to store ten 2D points
-vector2 ten_pts[10];
+//vector2 ten_pts[10];
+std::vector<vector2 *> pts;
 //keep track of the number of points stored thus far
-int num_pts;
 //keep track of which drawing mode we are in points or square
 //mode ==0 means draw square otherwise draw points
 int mode;
@@ -52,8 +54,8 @@ void draw_pts() {
   glPointSize(2.0);
   glBegin(GL_POINTS);
     glColor3f(0.5, 0.2, 0.8);
-  for (int i=0; i<num_pts; i++) {
-    glVertex2f(ten_pts[i].x, ten_pts[i].y);
+  for (int i=0; i<pts.size(); i++) {
+    glVertex2f(pts[i]->x, pts[i]->y);
     //printf("pt: %f %f\n", ten_pts[i].x, ten_pts[i].y);
   }
   glEnd();
@@ -77,13 +79,13 @@ void mouse(int button, int state, int x, int y) {
   if (button == GLUT_LEFT_BUTTON) {
     if (state == GLUT_DOWN) { /* if the left button is clicked */
       printf("mouse clicked at %d %d (%f, %f)\n", x, y, p2w_x(x), p2w_y(y) );
-      if (num_pts < 10) {
-        ten_pts[num_pts].x = p2w_x(x);
-        ten_pts[num_pts].y = p2w_y(y);
-        num_pts++;
+        vector2 *temp = new vector2();
+        temp->x = p2w_x(x);
+        temp->y = p2w_y(y);
+
+        pts.push_back(temp);
         glutPostRedisplay();
 
-      }
     }
   }
 }
@@ -129,7 +131,6 @@ int main( int argc, char** argv ){
 	glClearColor(1.0, 1.0, 1.0, 1.0);
   //global variable intialization
   GW = GH = 200;
-  num_pts = 0;
   mode = 0;
   //register the callback functions
 	glutDisplayFunc( display );
