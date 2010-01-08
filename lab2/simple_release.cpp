@@ -131,6 +131,23 @@ void reshape( GLsizei w, GLsizei h) {
    gluOrtho2D(-(float)w/h, (float)w/h, -1, 1);
 }
 
+void menu ( int value) {
+   if (value == 1) {
+      printf("Switching mode");
+      mode = !mode;
+      glutPostRedisplay();
+   }
+   else if (value == 2) {
+      printf("clear");
+      pts.clear();
+      glutPostRedisplay();
+   }
+   else if (value == 3) {
+      printf("quit");
+      exit( EXIT_SUCCESS );
+   }
+}
+
 int main( int argc, char** argv ){
 
 	glutInit( &argc, argv );
@@ -147,8 +164,15 @@ int main( int argc, char** argv ){
 	glutDisplayFunc( display );
   glutMouseFunc( mouse );
   glutMotionFunc( mouseMove );
-  glutKeyboardFunc( keyboard );
+  //glutKeyboardFunc( keyboard );
   glutReshapeFunc( reshape );
+
+  // menu
+  int rightMenu = glutCreateMenu(menu);
+  glutAddMenuEntry("Toggle Mode", 1);
+  glutAddMenuEntry("Clear Points", 2);
+  glutAddMenuEntry("Quit", 3);
+  glutAttachMenu(GLUT_RIGHT_BUTTON);
 
 	glutMainLoop();
 }
