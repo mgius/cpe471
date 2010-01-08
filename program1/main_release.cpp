@@ -1,6 +1,7 @@
 /**
  * Code which uses the image library originally from Princeton COS 426
- * main by ZJW for CalPoly CSC 471 assignment 1 - NPR painterly rendering on image
+ * main by ZJW for CalPoly CSC 471 assignment 1 - NPR painterly rendering 
+ * on image
  **/
 
 #include "image.h"
@@ -51,6 +52,33 @@ int mainWin, imgWin;
 //global image
 Image *img;
 
+// #define of stroke types
+typedef struct stroke {
+   float x,y; // location in worldspace
+   int shape; // shape of stroke
+   int r,g,b,a; // color of stroke (and alpha)
+   int size; // size of stroke
+
+   // Draws a stroke to the current window
+   void draw() {
+
+   }
+
+   void drawCircle() {
+
+   }
+
+   void drawSquare() {
+
+   }
+
+   void drawQ() {
+
+   }
+
+} stroke;
+
+
 /* Image scaling upon window reshape. */
 void reshape(int w, int h)
 {
@@ -66,7 +94,8 @@ void reshape(int w, int h)
 
 
 void DrawImage() {
-  glDrawPixels( img->width, img->height, GL_RGBA, GL_UNSIGNED_BYTE, img->pixels);
+  glDrawPixels( img->width, img->height, GL_RGBA, 
+                GL_UNSIGNED_BYTE, img->pixels);
 }
 
 
