@@ -27,9 +27,11 @@ std::vector<vector2> pts;
 //mode ==0 means draw square otherwise draw points
 int mode;
 
-#define WorldW 2.0
+//#define WorldW 2.0
+#define WorldW 2 *(float)GW / (float)GH
 #define WorldH 2.0
 inline float p2w_x(float w) {
+   //float WorldW = 2 * (float) GW / (float) GH;
    return WorldW / GW * w - WorldW / 2;
 }
 
@@ -164,7 +166,7 @@ int main( int argc, char** argv ){
 	glutDisplayFunc( display );
   glutMouseFunc( mouse );
   glutMotionFunc( mouseMove );
-  //glutKeyboardFunc( keyboard );
+  glutKeyboardFunc( keyboard );
   glutReshapeFunc( reshape );
 
   // menu
