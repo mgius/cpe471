@@ -68,9 +68,8 @@ float cur_r=1.0, cur_g=0, cur_b=0, cur_a=0; //
 
 int current_size = SIZE_SMALL;
 
-
-
-#define WorldW 2 *(float)GW / (float)GH
+//#define WorldW 2 *(float)GW / (float)GH
+#define WorldW 2.0
 #define WorldH 2.0
 
 float p2w_x(float w) {
@@ -184,7 +183,8 @@ void mouse(int button, int state, int x, int y) {
     if (state == GLUT_DOWN) { /* if the left button is clicked */
       printf("mouse clicked at %d %d, (%f, %f)\n", x, y, p2w_x(x), p2w_y(y));
       strokes.push_back(stroke(p2w_x(x), p2w_y(y)));
-      glutSwapBuffers();
+      glutSetWindow(mainWin);
+      glutPostRedisplay();
     }
   }
 }

@@ -1,12 +1,9 @@
 GL=-lGL -lglut
-PROVIDEDFILES=pixel.cpp readbmp.cpp savebmp.cpp vector.cpp image.cpp
+PROVIDEDFILES=pixel.o readbmp.o savebmp.o vector.o image.o
 all: program1
 
-program1: provided
+program1: $(PROVIDEDFILES) main_release.cpp
 	g++ -o prog1 $(GL) main_release.cpp *.o
-
-provided: $(PROVIDEDFILES)
-	g++ -c $(PROVIDEDFILES)
 
 clean:
 	rm -f *.o prog1
