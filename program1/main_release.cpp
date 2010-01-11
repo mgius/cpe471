@@ -53,6 +53,7 @@ int mainWin, imgWin;
 //global image
 Image *img;
 
+
 // Current stroke settings
 #define SHAPE_CIRCLE 1
 #define SHAPE_SQUARE 2
@@ -73,16 +74,16 @@ int current_size = SIZE_SMALL;
 #define WorldH 2.0
 
 float p2w_x(float w) {
-	return WorldW / img->width * w - WorldW / 2;
+	return WorldW / (float)img->width * w - WorldW / 2;
 }
 
 float p2w_y(float h) {
-	return -1 * (WorldH / img->height * h - WorldH / 2);
+	return -1 * (WorldH / (float)img->height * h - WorldH / 2);
 }
 float deg2rad(int deg) {
-	return M_PI * deg / 180;
+	return M_PI * deg / 180.0;
 }
-// #define of stroke types
+
 class stroke {
 public:
    float x,y; // location in worldspace
@@ -90,8 +91,15 @@ public:
    float r,g,b,a; // color of stroke (and alpha)
    int size; // size of stroke
 
+   stroke(float x_, float y_) : shape(SHAPE_CIRCLE), r(1.0),
+              g(0), b(0), a(0), size(SIZE_LARGE) {
+      x = x_;
+      y = y_;
+   }
+
 	stroke() : x(0), y(0), shape(SHAPE_CIRCLE), r(1.0), 
 	           g(0), b(0), a(0), size(SIZE_LARGE) {}
+   
    // Draws a stroke to the current window
    void draw() {
 		if (shape == SHAPE_CIRCLE)
@@ -104,10 +112,14 @@ public:
 			printf("Not a valid stroke type, ignoring stroke...\n");
    }
 
+private:
    void drawCircle() {
+      printf("Drawing a circle at %f, %f\n", x, y);
 		glBegin(GL_POLYGON);
+      glColor3f(r,g,b);
 		for (int i = 0; i < 360; i++) {
-			glVertex2f(cos(deg2rad(i)) + x, sin(deg2rad(i)) + y);
+			glVertex2f((float)size / GW * cos(deg2rad(i)) + x, 
+                    (float)size / GH * sin(deg2rad(i)) + y);
 		}
 		glEnd();
    }
@@ -121,6 +133,7 @@ public:
    }
 
 };
+vector<stroke> strokes;
 
 
 /* Image scaling upon window reshape. */
@@ -150,6 +163,9 @@ void display() {
   printf("In main display\n");
 	glClear(GL_COLOR_BUFFER_BIT);
 //.....
+   for (int i = 0; i < strokes.size(); i++) {
+      strokes[i].draw();
+   }
 
 	glutSwapBuffers();
 }
@@ -167,6 +183,8 @@ void mouse(int button, int state, int x, int y) {
   if (button == GLUT_LEFT_BUTTON) {
     if (state == GLUT_DOWN) { /* if the left button is clicked */
       printf("mouse clicked at %d %d, (%f, %f)\n", x, y, p2w_x(x), p2w_y(y));
+      strokes.push_back(stroke(p2w_x(x), p2w_y(y)));
+      glutSwapBuffers();
     }
   }
 }
@@ -230,9 +248,8 @@ int main(int argc, char **argv)
   glutMouseFunc( mouse );
   glutMotionFunc( mouseMove );
 
+  strokes.push_back(stroke());
   glutMainLoop();
-  stroke myStroke();
-  myStroke.draw();
 
 }
 
