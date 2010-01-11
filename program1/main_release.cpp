@@ -60,8 +60,12 @@ Image *img;
 #define SHAPE_Q      4
 int current_shape = SHAPE_CIRCLE;
 
-bool use_source_color = false;
-float cur_r=1.0, cur_g=0, cur_b=0, cur_a=0; //
+#define COLOR_RED    1
+#define COLOR_GREEN  2
+#define COLOR_BLUE   4
+#define COLOR_SAMPLE 8
+bool sample_color = true;
+float cur_r=1.0, cur_g=0, cur_b=0, cur_a=0;
 
 #define SIZE_LARGE 10
 #define SIZE_SMALL 5
@@ -90,15 +94,12 @@ public:
    float r,g,b,a; // color of stroke (and alpha)
    int size; // size of stroke
 
-   stroke(float x_, float y_) : shape(SHAPE_CIRCLE), r(1.0),
-              g(0), b(0), a(0), size(SIZE_LARGE) {
+   stroke(float x_, float y_) : shape(current_shape), r(cur_r),
+              g(cur_g), b(cur_b), a(cur_a), size(current_size) {
       x = x_;
       y = y_;
    }
 
-	stroke() : x(0), y(0), shape(SHAPE_CIRCLE), r(1.0), 
-	           g(0), b(0), a(0), size(SIZE_LARGE) {}
-   
    // Draws a stroke to the current window
    void draw() {
 		if (shape == SHAPE_CIRCLE)
@@ -113,12 +114,13 @@ public:
 
 private:
    void drawCircle() {
-      printf("Drawing a circle at %f, %f\n", x, y);
-		glBegin(GL_POLYGON);
+      //printf("Drawing a circle at %f, %f\n", x, y);
+		glBegin(GL_TRIANGLE_FAN);
       glColor3f(r,g,b);
-		for (int i = 0; i < 360; i++) {
-			glVertex2f((float)size / GW * cos(deg2rad(i)) + x, 
-                    (float)size / GH * sin(deg2rad(i)) + y);
+      glVertex2f(x,y);
+		for (int i = 0; i < 180; i++) {
+			glVertex2f((float)size / GW * cos(deg2rad(i*2)) + x, 
+                    (float)size / GH * sin(deg2rad(i*2)) + y);
 		}
 		glEnd();
    }
@@ -161,7 +163,7 @@ void DrawImage() {
 void display() {
   printf("In main display\n");
 	glClear(GL_COLOR_BUFFER_BIT);
-//.....
+
    for (int i = 0; i < strokes.size(); i++) {
       strokes[i].draw();
    }
@@ -182,6 +184,16 @@ void mouse(int button, int state, int x, int y) {
   if (button == GLUT_LEFT_BUTTON) {
     if (state == GLUT_DOWN) { /* if the left button is clicked */
       printf("mouse clicked at %d %d, (%f, %f)\n", x, y, p2w_x(x), p2w_y(y));
+      if (sample_color) {
+         float pixBuf[3];
+         glReadPixels(x,y, 1,1, GL_RGB, GL_FLOAT, &pixBuf);
+         //printf("found color %f, %f, %f\n", pixBuf[0], pixBuf[1], pixBuf[2]);
+         cur_r = pixBuf[0];
+         cur_g = pixBuf[1];
+         cur_b = pixBuf[2];
+         cur_a = 0;
+
+      }
       strokes.push_back(stroke(p2w_x(x), p2w_y(y)));
       glutSetWindow(mainWin);
       glutPostRedisplay();
@@ -191,9 +203,19 @@ void mouse(int button, int state, int x, int y) {
 
 //the mouse move callback
 void mouseMove(int x, int y) {
-  unsigned char color[3];
+   if (sample_color) {
+      float pixBuf[3];
+      glReadPixels(x,y, 1,1, GL_RGB, GL_FLOAT, &pixBuf);
+      //printf("found color %f, %f, %f\n", pixBuf[0], pixBuf[1], pixBuf[2]);
+      cur_r = pixBuf[0];
+      cur_g = pixBuf[1];
+      cur_b = pixBuf[2];
+      cur_a = 0;
 
-  
+   }
+   strokes.push_back(stroke(p2w_x(x), p2w_y(y)));
+   glutSetWindow(mainWin);
+   glutPostRedisplay();
 }
 
 
@@ -209,8 +231,71 @@ void keyboard(unsigned char key, int x, int y ){
   }
 }
 
+void shapeMenuHandler(int value) {
+   current_shape = value;
+}
+
+void colorMenuHandler(int value) {
+   sample_color = false;
+   if (value == COLOR_SAMPLE) {
+      sample_color = true;
+   }
+   else if (value == COLOR_RED) {
+      cur_r=1.0;
+      cur_g=cur_b=cur_a=0;
+   }
+   else if (value == COLOR_GREEN) {
+      cur_g=1.0;
+      cur_r=cur_b=cur_a=0;
+   }
+   else if (value == COLOR_BLUE) {
+      cur_b=1.0;
+      cur_r=cur_g=cur_a=0;
+   }
+   else {
+      printf("invalid color");
+   }
+
+}
+
+void sizeMenuHandler(int value) {
+   current_size = value;
+}
+
+void mainMenuHandler(int value) {
+   if (value == 1) {
+      printf("TODO: backfill");
+   }
+   else {
+      printf("Invalid selection in mainMenuHandler");
+   }
+
+}
 
 void doMenus() {
+   int shapeMenu = glutCreateMenu(shapeMenuHandler);
+   glutAddMenuEntry("circle", SHAPE_CIRCLE);
+   glutAddMenuEntry("square", SHAPE_SQUARE);
+   glutAddMenuEntry("q", SHAPE_Q);
+
+   int colorMenu = glutCreateMenu(colorMenuHandler);
+   glutAddMenuEntry("red", COLOR_RED);
+   glutAddMenuEntry("green", COLOR_GREEN);
+   glutAddMenuEntry("blue", COLOR_BLUE);
+   glutAddMenuEntry("sample from image", COLOR_SAMPLE);
+
+   int sizeMenu = glutCreateMenu(sizeMenuHandler);
+   glutAddMenuEntry("small", SIZE_SMALL);
+   glutAddMenuEntry("large", SIZE_LARGE);
+
+   int mainMenu = glutCreateMenu(mainMenuHandler);
+   glutAddSubMenu("shapes", shapeMenu);
+   glutAddSubMenu("colors", colorMenu);
+   glutAddSubMenu("size", sizeMenu);
+   glutAddMenuEntry("backfill", 1);
+
+   glutAttachMenu(GLUT_RIGHT_BUTTON);
+
 }
 
 /**
@@ -248,7 +333,6 @@ int main(int argc, char **argv)
   glutMouseFunc( mouse );
   glutMotionFunc( mouseMove );
 
-  strokes.push_back(stroke());
   glutMainLoop();
 
 }
