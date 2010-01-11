@@ -7,6 +7,7 @@
 #include "image.h"
 #include "bmpio.h"
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -52,20 +53,63 @@ int mainWin, imgWin;
 //global image
 Image *img;
 
+// Current stroke settings
+#define SHAPE_CIRCLE 1
+#define SHAPE_SQUARE 2
+#define SHAPE_Q      4
+int current_shape = SHAPE_CIRCLE;
+
+bool use_source_color = false;
+float cur_r=1.0, cur_g=0, cur_b=0, cur_a=0; //
+
+#define SIZE_LARGE 10
+#define SIZE_SMALL 5
+
+int current_size = SIZE_SMALL;
+
+
+
+#define WorldW 2 *(float)GW / (float)GH
+#define WorldH 2.0
+
+float p2w_x(float w) {
+	return WorldW / img->width * w - WorldW / 2;
+}
+
+float p2w_y(float h) {
+	return -1 * (WorldH / img->height * h - WorldH / 2);
+}
+float deg2rad(int deg) {
+	return M_PI * deg / 180;
+}
 // #define of stroke types
-typedef struct stroke {
+class stroke {
+public:
    float x,y; // location in worldspace
    int shape; // shape of stroke
-   int r,g,b,a; // color of stroke (and alpha)
+   float r,g,b,a; // color of stroke (and alpha)
    int size; // size of stroke
 
+	stroke() : x(0), y(0), shape(SHAPE_CIRCLE), r(1.0), 
+	           g(0), b(0), a(0), size(SIZE_LARGE) {}
    // Draws a stroke to the current window
    void draw() {
-
+		if (shape == SHAPE_CIRCLE)
+			drawCircle();
+		else if(shape == SHAPE_SQUARE)
+			drawSquare();
+		else if(shape == SHAPE_Q) 
+			drawQ();
+		else 
+			printf("Not a valid stroke type, ignoring stroke...\n");
    }
 
    void drawCircle() {
-
+		glBegin(GL_POLYGON);
+		for (int i = 0; i < 360; i++) {
+			glVertex2f(cos(deg2rad(i)) + x, sin(deg2rad(i)) + y);
+		}
+		glEnd();
    }
 
    void drawSquare() {
@@ -76,7 +120,7 @@ typedef struct stroke {
 
    }
 
-} stroke;
+};
 
 
 /* Image scaling upon window reshape. */
@@ -122,7 +166,7 @@ void mouse(int button, int state, int x, int y) {
 
   if (button == GLUT_LEFT_BUTTON) {
     if (state == GLUT_DOWN) { /* if the left button is clicked */
-      printf("mouse clicked at %d %d\n", x, y);
+      printf("mouse clicked at %d %d, (%f, %f)\n", x, y, p2w_x(x), p2w_y(y));
     }
   }
 }
@@ -187,6 +231,8 @@ int main(int argc, char **argv)
   glutMotionFunc( mouseMove );
 
   glutMainLoop();
+  stroke myStroke();
+  myStroke.draw();
 
 }
 
