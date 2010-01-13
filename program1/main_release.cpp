@@ -126,6 +126,16 @@ private:
    }
 
    void drawSquare() {
+      //square centered at x,y, with vertices at x + 1/2width, y + 1/2height, etc
+      glBegin(GL_POLYGON);
+         float width = (float)size / GW * 2;
+         float height = (float)size / GH * 2;
+         glColor3f(r,g,b);
+         glVertex2f(x + width / 2, y + height / 2);
+         glVertex2f(x + width / 2, y - height / 2);
+         glVertex2f(x - width / 2, y - height / 2);
+         glVertex2f(x - width / 2, y + height / 2);
+      glEnd();
 
    }
 
@@ -175,6 +185,21 @@ void displayImage() {
   printf("image display called\n");
   DrawImage();
   glutSwapBuffers();
+}
+
+inline void sample(int x, int y) {
+   float pixBuf[3];
+   glReadPixels(x,img->height - y, 1,1, GL_RGB, GL_FLOAT, &pixBuf);
+   //printf("found color %f, %f, %f\n", pixBuf[0], pixBuf[1], pixBuf[2]);
+   cur_r = pixBuf[0];
+   cur_g = pixBuf[1];
+   cur_b = pixBuf[2];
+   cur_a = 0;
+}
+
+// iterates over the whole image, sampling the image at 5 pixel intervals
+// 
+void backFill() {
 
 }
 
@@ -185,14 +210,7 @@ void mouse(int button, int state, int x, int y) {
     if (state == GLUT_DOWN) { /* if the left button is clicked */
       printf("mouse clicked at %d %d, (%f, %f)\n", x, y, p2w_x(x), p2w_y(y));
       if (sample_color) {
-         float pixBuf[3];
-         glReadPixels(x,y, 1,1, GL_RGB, GL_FLOAT, &pixBuf);
-         //printf("found color %f, %f, %f\n", pixBuf[0], pixBuf[1], pixBuf[2]);
-         cur_r = pixBuf[0];
-         cur_g = pixBuf[1];
-         cur_b = pixBuf[2];
-         cur_a = 0;
-
+         sample(x,y);
       }
       strokes.push_back(stroke(p2w_x(x), p2w_y(y)));
       glutSetWindow(mainWin);
@@ -204,14 +222,7 @@ void mouse(int button, int state, int x, int y) {
 //the mouse move callback
 void mouseMove(int x, int y) {
    if (sample_color) {
-      float pixBuf[3];
-      glReadPixels(x,y, 1,1, GL_RGB, GL_FLOAT, &pixBuf);
-      //printf("found color %f, %f, %f\n", pixBuf[0], pixBuf[1], pixBuf[2]);
-      cur_r = pixBuf[0];
-      cur_g = pixBuf[1];
-      cur_b = pixBuf[2];
-      cur_a = 0;
-
+      sample(x,y);
    }
    strokes.push_back(stroke(p2w_x(x), p2w_y(y)));
    glutSetWindow(mainWin);
