@@ -53,11 +53,32 @@ int mainWin, imgWin;
 //global image
 Image *img;
 
+typedef struct Point {
+   float x;
+   float y;
+   Point(float x_, float y_) {
+      x = x_;
+      y = y_;
+   }
+} Point;
+
+#define RED 0
+#define GREEN 1
+#define BLUE 2
+typedef struct Color {
+   GLfloat rgb[3];
+   Color(float r_, float g_, float b_) {
+      rgb[RED] = r_;
+      rgb[GREEN] = g_;
+      rgb[BLUE] = b_;
+   }
+} Color;
 
 // Current stroke settings
 #define SHAPE_CIRCLE 1
 #define SHAPE_SQUARE 2
-#define SHAPE_BARS      4
+#define SHAPE_BARS   4
+#define SHAPE_LINE   8
 int current_shape = SHAPE_CIRCLE;
 
 #define COLOR_RED    1
@@ -65,7 +86,7 @@ int current_shape = SHAPE_CIRCLE;
 #define COLOR_BLUE   4
 #define COLOR_SAMPLE 8
 bool sample_color = true;
-float cur_r=1.0, cur_g=0, cur_b=0, cur_a=0;
+float cur_r=1.0, cur_g=0, cur_b=0;
 
 #define SIZE_LARGE 10
 #define SIZE_SMALL 5
@@ -87,76 +108,112 @@ float deg2rad(int deg) {
 	return M_PI * deg / 180.0;
 }
 
+// There is a bug here.  Somebody could transition stroke types 
+// indefinitely and eventually fill up memory without ever drawing a stroke
 class stroke {
-public:
+private:
    float x,y; // location in worldspace
+   vector<Point> points; // locations in worldspace
    int shape; // shape of stroke
-   float r,g,b,a; // color of stroke (and alpha)
+   vector<Color> colors; // Color of each point in worldspace
    int size; // size of stroke
 
-   stroke(float x_, float y_) : shape(current_shape), r(cur_r),
-              g(cur_g), b(cur_b), a(cur_a), size(current_size) {
-      x = x_;
-      y = y_;
+public:
+   stroke() : shape(current_shape), size(current_size) {
+   }
+
+   void addPoint(Point aPoint) {
+      points.push_back(aPoint);
+      colors.push_back(Color(cur_r, cur_g, cur_b));
    }
 
    // Draws a stroke to the current window
    void draw() {
 		if (shape == SHAPE_CIRCLE)
-			drawCircle();
+			drawCircles();
 		else if(shape == SHAPE_SQUARE)
-			drawSquare();
+			drawSquares();
 		else if(shape == SHAPE_BARS) 
 			drawBars();
+      else if(shape == SHAPE_LINE)
+         drawLines();
 		else 
 			printf("Not a valid stroke type, ignoring stroke...\n");
    }
 
 private:
-   void drawCircle() {
-      //printf("Drawing a circle at %f, %f\n", x, y);
-		glBegin(GL_TRIANGLE_FAN);
-      glColor3f(r,g,b);
-      glVertex2f(x,y);
-		for (int i = 0; i < 31; i++) {
-			glVertex2f((float)size / GW * cos(deg2rad(i*12)) + x, 
-                    (float)size / GH * sin(deg2rad(i*12)) + y);
-		}
-		glEnd();
+   void drawCircles() {
+      // Each Point is the center of a circle
+      printf("Drawing circles\n");
+      for (int j = 0; j < points.size(); j++) {
+         glBegin(GL_TRIANGLE_FAN);
+         glColor3fv(colors[j].rgb);
+         glVertex2f(points[j].x,points[j].y);
+         for (int i = 0; i < 31; i++) {
+            glVertex2f((float)size / GW * cos(deg2rad(i*12)) + points[j].x, 
+                  (float)size / GH * sin(deg2rad(i*12)) + points[j].y);
+         }
+         glEnd();
+
+      }
    }
 
-   void drawSquare() {
+   void drawSquares() {
       //square centered at x,y, with vertices at x + 1/2width, y + 1/2height, etc
-      glBegin(GL_POLYGON);
-         float width = (float)size / GW * 2;
-         float height = (float)size / GH * 2;
-         glColor3f(r,g,b);
-         glVertex2f(x + width / 2, y + height / 2);
-         glVertex2f(x + width / 2, y - height / 2);
-         glVertex2f(x - width / 2, y - height / 2);
-         glVertex2f(x - width / 2, y + height / 2);
-      glEnd();
-
+      //each point is the center of a square
+      float width = (float)size / GW * 2;
+      float height = (float)size / GH * 2;
+      for(int i = 0; i < points.size(); i++) {
+         glBegin(GL_POLYGON);
+            glColor3fv(colors[i].rgb);
+            glVertex2f(points[i].x + width / 2, points[i].y + height / 2);
+            glVertex2f(points[i].x + width / 2, points[i].y - height / 2);
+            glVertex2f(points[i].x - width / 2, points[i].y - height / 2);
+            glVertex2f(points[i].x - width / 2, points[i].y + height / 2);
+         glEnd();
+        
+      }
    }
 
    void drawBars() {
-      glBegin(GL_QUADS);
-         float width = (float) size / GW * 3;
-         float height = (float) size / GH * 3;
-         glColor3f(r,g,b);
-         // top bar
-         glVertex2f(x - width / 2, y + height);
-         glVertex2f(x + width / 2, y + height);
-         glVertex2f(x + width / 2, y + height / 2);
-         glVertex2f(x - width / 2, y + height / 2);
+      // each point is the center of a set of bars
+      float width = (float) size / GW * 3;
+      float height = (float) size / GH * 3;
+      for (int i = 0; i < points.size(); i ++) {
 
-         // bottom bar
-         // top bar
-         glVertex2f(x - width / 2, y - height);
-         glVertex2f(x + width / 2, y - height);
-         glVertex2f(x + width / 2, y - height / 2);
-         glVertex2f(x - width / 2, y - height / 2);
+         glBegin(GL_QUADS);
+            glColor3fv(colors[i].rgb);
+            // top bar
+            glVertex2f(points[i].x - width / 2, points[i].y + height);
+            glVertex2f(points[i].x + width / 2, points[i].y + height);
+            glVertex2f(points[i].x + width / 2, points[i].y + height / 2);
+            glVertex2f(points[i].x - width / 2, points[i].y + height / 2);
+
+            // bottom bar
+            // top bar
+            glVertex2f(points[i].x - width / 2, points[i].y - height);
+            glVertex2f(points[i].x + width / 2, points[i].y - height);
+            glVertex2f(points[i].x + width / 2, points[i].y - height / 2);
+            glVertex2f(points[i].x - width / 2, points[i].y - height / 2);
+         glEnd();
+      }
+   }
+
+   void drawLines() {
+      float oldLineWidth; 
+      glGetFloatv(GL_LINE_WIDTH, &oldLineWidth);
+
+      glLineWidth(size);
+
+      glBegin(GL_LINES);
+      for (int i = 0; i < points.size() / 2; i++) {
+         glColor3fv(colors[2 * i].rgb);
+         glVertex2f(points[2 * i].x, points[2 * i].y);
+         glColor3fv(colors[2 * i + 1].rgb);
+         glVertex2f(points[2 * i + 1].x, points[2 * i + 1].y);
+      }
       glEnd();
+      glPointSize(oldLineWidth);
    }
 
 };
@@ -210,7 +267,6 @@ inline void sample(int x, int y) {
    cur_r = pixBuf[0];
    cur_g = pixBuf[1];
    cur_b = pixBuf[2];
-   cur_a = 0;
 }
 
 // iterates over the whole image, sampling the image at 5 pixel intervals
@@ -218,15 +274,12 @@ inline void sample(int x, int y) {
 void backFill(int skip) {
    printf("Backfill\n");
    glutSetWindow(imgWin);
-   int before = strokes.size();
    for (int x = 0; x < img->width / skip; x++) {
       for (int y = 0; y < img->height / skip; y++) {
          sample(x * skip, y * skip);
-         strokes.push_back(stroke(p2w_x(x * skip), p2w_y(y * skip)));
+         strokes.back().addPoint(Point(p2w_x(x * skip), p2w_y(y * skip)));
       }
    }
-   int after = strokes.size();
-   printf("%d\n", after - before);
    glutSetWindow(mainWin);
    glutPostRedisplay();
 }
@@ -240,7 +293,7 @@ void mouse(int button, int state, int x, int y) {
       if (sample_color) {
          sample(x,y);
       }
-      strokes.push_back(stroke(p2w_x(x), p2w_y(y)));
+      strokes.back().addPoint(Point(p2w_x(x), p2w_y(y)));
       glutSetWindow(mainWin);
       glutPostRedisplay();
     }
@@ -249,10 +302,14 @@ void mouse(int button, int state, int x, int y) {
 
 //the mouse move callback
 void mouseMove(int x, int y) {
+   // don't do anything if line
+   if (current_shape == SHAPE_LINE)
+      return;
+
    if (sample_color) {
       sample(x,y);
    }
-   strokes.push_back(stroke(p2w_x(x), p2w_y(y)));
+   strokes.back().addPoint(Point(p2w_x(x), p2w_y(y)));
    glutSetWindow(mainWin);
    glutPostRedisplay();
 }
@@ -276,6 +333,7 @@ void keyboard(unsigned char key, int x, int y ){
 
 void shapeMenuHandler(int value) {
    current_shape = value;
+   strokes.push_back(stroke());
 }
 
 void colorMenuHandler(int value) {
@@ -285,24 +343,26 @@ void colorMenuHandler(int value) {
    }
    else if (value == COLOR_RED) {
       cur_r=1.0;
-      cur_g=cur_b=cur_a=0;
+      cur_g=cur_b=0;
    }
    else if (value == COLOR_GREEN) {
       cur_g=1.0;
-      cur_r=cur_b=cur_a=0;
+      cur_r=cur_b=0;
    }
    else if (value == COLOR_BLUE) {
       cur_b=1.0;
-      cur_r=cur_g=cur_a=0;
+      cur_r=cur_g=0;
    }
    else {
       printf("invalid color");
    }
 
+
 }
 
 void sizeMenuHandler(int value) {
    current_size = value;
+   strokes.push_back(stroke());
 }
 
 void mainMenuHandler(int value) {
@@ -323,6 +383,7 @@ void doMenus() {
    glutAddMenuEntry("circle", SHAPE_CIRCLE);
    glutAddMenuEntry("square", SHAPE_SQUARE);
    glutAddMenuEntry("bars", SHAPE_BARS);
+   glutAddMenuEntry("line", SHAPE_LINE);
 
    int colorMenu = glutCreateMenu(colorMenuHandler);
    glutAddMenuEntry("red", COLOR_RED);
@@ -382,6 +443,7 @@ int main(int argc, char **argv)
   glutMotionFunc( mouseMove );
 
   doMenus();
+  strokes.push_back(stroke());
   glutMainLoop();
 
 }
