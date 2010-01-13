@@ -110,6 +110,8 @@ float deg2rad(int deg) {
 
 // There is a bug here.  Somebody could transition stroke types 
 // indefinitely and eventually fill up memory without ever drawing a stroke
+// Stroke class, contains a vector of points and colors.  When size/shape 
+// changes, should spawn a new stroke to contain it.
 class stroke {
 private:
    float x,y; // location in worldspace
@@ -144,7 +146,6 @@ public:
 private:
    void drawCircles() {
       // Each Point is the center of a circle
-      printf("Drawing circles\n");
       for (int j = 0; j < points.size(); j++) {
          glBegin(GL_TRIANGLE_FAN);
          glColor3fv(colors[j].rgb);
@@ -159,10 +160,11 @@ private:
    }
 
    void drawSquares() {
-      //square centered at x,y, with vertices at x + 1/2width, y + 1/2height, etc
-      //each point is the center of a square
+      // square centered at x,y, 
+      // with vertices at x + 1/2width, y + 1/2height, etc
       float width = (float)size / GW * 2;
       float height = (float)size / GH * 2;
+      // each point is the center of a square
       for(int i = 0; i < points.size(); i++) {
          glBegin(GL_POLYGON);
             glColor3fv(colors[i].rgb);
@@ -176,9 +178,9 @@ private:
    }
 
    void drawBars() {
-      // each point is the center of a set of bars
       float width = (float) size / GW * 3;
       float height = (float) size / GH * 3;
+      // each point is the center of a set of bars
       for (int i = 0; i < points.size(); i ++) {
 
          glBegin(GL_QUADS);
@@ -206,6 +208,8 @@ private:
       glLineWidth(size);
 
       glBegin(GL_LINES);
+      // If there are an odd number of points, consider the last point
+      // to be an incomplete line and ignore it
       for (int i = 0; i < points.size() / 2; i++) {
          glColor3fv(colors[2 * i].rgb);
          glVertex2f(points[2 * i].x, points[2 * i].y);
@@ -240,13 +244,12 @@ void DrawImage() {
 }
 
 
-
-
 //the display call back - all drawing should be done in this function
 void display() {
   printf("In main display\n");
 	glClear(GL_COLOR_BUFFER_BIT);
 
+   // Generic Draw function makes this trivial
    for (int i = 0; i < strokes.size(); i++) {
       strokes[i].draw();
    }
@@ -260,13 +263,15 @@ void displayImage() {
   glutSwapBuffers();
 }
 
+// Samples the image at a particular location. Assumes that x/y passed in
+// has not been manipulated
 inline void sample(int x, int y) {
    float pixBuf[3];
    glReadPixels(x,img->height - y, 1,1, GL_RGB, GL_FLOAT, &pixBuf);
    //printf("found color %f, %f, %f\n", pixBuf[0], pixBuf[1], pixBuf[2]);
-   cur_r = pixBuf[0];
-   cur_g = pixBuf[1];
-   cur_b = pixBuf[2];
+   cur_r = pixBuf[RED]
+   cur_g = pixBuf[GREEN];
+   cur_b = pixBuf[BLUE];
 }
 
 // iterates over the whole image, sampling the image at 5 pixel intervals
@@ -331,11 +336,14 @@ void keyboard(unsigned char key, int x, int y ){
   }
 }
 
+// Changes shape.  I'm using the same value for the menu and 
+// stroke class.  Create a new stroke for points to be added to
 void shapeMenuHandler(int value) {
    current_shape = value;
    strokes.push_back(stroke());
 }
 
+// Changes color.  No need to create a new stroke.
 void colorMenuHandler(int value) {
    sample_color = false;
    if (value == COLOR_SAMPLE) {
@@ -360,11 +368,13 @@ void colorMenuHandler(int value) {
 
 }
 
+// changes size.  Need to create a new stroke
 void sizeMenuHandler(int value) {
    current_size = value;
    strokes.push_back(stroke());
 }
 
+// base menu options.  Currently supporst backfill and backfill sparse
 void mainMenuHandler(int value) {
    if (value == 1) {
       backFill(3);
@@ -378,6 +388,7 @@ void mainMenuHandler(int value) {
 
 }
 
+// Creates the menus and attaches them to both the main and img window
 void doMenus() {
    int shapeMenu = glutCreateMenu(shapeMenuHandler);
    glutAddMenuEntry("circle", SHAPE_CIRCLE);
@@ -443,6 +454,7 @@ int main(int argc, char **argv)
   glutMotionFunc( mouseMove );
 
   doMenus();
+  // Create a default stroke to add points to
   strokes.push_back(stroke());
   glutMainLoop();
 
