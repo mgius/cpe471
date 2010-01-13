@@ -57,7 +57,7 @@ Image *img;
 // Current stroke settings
 #define SHAPE_CIRCLE 1
 #define SHAPE_SQUARE 2
-#define SHAPE_Q      4
+#define SHAPE_BARS      4
 int current_shape = SHAPE_CIRCLE;
 
 #define COLOR_RED    1
@@ -106,8 +106,8 @@ public:
 			drawCircle();
 		else if(shape == SHAPE_SQUARE)
 			drawSquare();
-		else if(shape == SHAPE_Q) 
-			drawQ();
+		else if(shape == SHAPE_BARS) 
+			drawBars();
 		else 
 			printf("Not a valid stroke type, ignoring stroke...\n");
    }
@@ -118,9 +118,9 @@ private:
 		glBegin(GL_TRIANGLE_FAN);
       glColor3f(r,g,b);
       glVertex2f(x,y);
-		for (int i = 0; i < 180; i++) {
-			glVertex2f((float)size / GW * cos(deg2rad(i*2)) + x, 
-                    (float)size / GH * sin(deg2rad(i*2)) + y);
+		for (int i = 0; i < 31; i++) {
+			glVertex2f((float)size / GW * cos(deg2rad(i*12)) + x, 
+                    (float)size / GH * sin(deg2rad(i*12)) + y);
 		}
 		glEnd();
    }
@@ -139,8 +139,24 @@ private:
 
    }
 
-   void drawQ() {
+   void drawBars() {
+      glBegin(GL_QUADS);
+         float width = (float) size / GW * 3;
+         float height = (float) size / GH * 3;
+         glColor3f(r,g,b);
+         // top bar
+         glVertex2f(x - width / 2, y + height);
+         glVertex2f(x + width / 2, y + height);
+         glVertex2f(x + width / 2, y + height / 2);
+         glVertex2f(x - width / 2, y + height / 2);
 
+         // bottom bar
+         // top bar
+         glVertex2f(x - width / 2, y - height);
+         glVertex2f(x + width / 2, y - height);
+         glVertex2f(x + width / 2, y - height / 2);
+         glVertex2f(x - width / 2, y - height / 2);
+      glEnd();
    }
 
 };
@@ -199,8 +215,20 @@ inline void sample(int x, int y) {
 
 // iterates over the whole image, sampling the image at 5 pixel intervals
 // 
-void backFill() {
-
+void backFill(int skip) {
+   printf("Backfill\n");
+   glutSetWindow(imgWin);
+   int before = strokes.size();
+   for (int x = 0; x < img->width / skip; x++) {
+      for (int y = 0; y < img->height / skip; y++) {
+         sample(x * skip, y * skip);
+         strokes.push_back(stroke(p2w_x(x * skip), p2w_y(y * skip)));
+      }
+   }
+   int after = strokes.size();
+   printf("%d\n", after - before);
+   glutSetWindow(mainWin);
+   glutPostRedisplay();
 }
 
 //the mouse button callback
@@ -235,6 +263,10 @@ void mouseMove(int x, int y) {
 void keyboard(unsigned char key, int x, int y ){
   switch( key ) {
 
+    case 'c': case 'C' :
+      strokes.clear();
+      glutPostRedisplay();
+      break;
     case 'q': case 'Q' :
       exit( EXIT_SUCCESS );
       break;
@@ -275,7 +307,10 @@ void sizeMenuHandler(int value) {
 
 void mainMenuHandler(int value) {
    if (value == 1) {
-      printf("TODO: backfill");
+      backFill(3);
+   }
+   else if (value == 2) {
+      backFill(8);
    }
    else {
       printf("Invalid selection in mainMenuHandler");
@@ -287,7 +322,7 @@ void doMenus() {
    int shapeMenu = glutCreateMenu(shapeMenuHandler);
    glutAddMenuEntry("circle", SHAPE_CIRCLE);
    glutAddMenuEntry("square", SHAPE_SQUARE);
-   glutAddMenuEntry("q", SHAPE_Q);
+   glutAddMenuEntry("bars", SHAPE_BARS);
 
    int colorMenu = glutCreateMenu(colorMenuHandler);
    glutAddMenuEntry("red", COLOR_RED);
@@ -304,9 +339,12 @@ void doMenus() {
    glutAddSubMenu("colors", colorMenu);
    glutAddSubMenu("size", sizeMenu);
    glutAddMenuEntry("backfill", 1);
+   glutAddMenuEntry("backfill sparse", 2);
 
+   glutSetWindow(mainWin);
    glutAttachMenu(GLUT_RIGHT_BUTTON);
-
+   glutSetWindow(imgWin);
+   glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
 /**
@@ -335,7 +373,6 @@ int main(int argc, char **argv)
   //register the callback functions for the main window
   glutDisplayFunc( display );
   glutKeyboardFunc( keyboard );
-  doMenus();
 
   imgWin = glutCreateSubWindow(mainWin, 0, 0, img->width, img->height);		
 	// it is required to register a display func for 
@@ -344,6 +381,7 @@ int main(int argc, char **argv)
   glutMouseFunc( mouse );
   glutMotionFunc( mouseMove );
 
+  doMenus();
   glutMainLoop();
 
 }
