@@ -10,5 +10,8 @@ program1: $(PROVIDEDFILES) main_release.o
 mkpackage: program1
 	tar -cf mgius_program1.tar $(HANDINFILES)
 
+handin: mkpackage
+	handin zwood csc471p1 mgius_program1.tar
+
 clean:
 	rm -f *.o prog1 mgius_program1.tar
