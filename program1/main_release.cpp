@@ -79,13 +79,16 @@ typedef struct Color {
 #define SHAPE_SQUARE 2
 #define SHAPE_BARS   4
 #define SHAPE_LINE   8
+#define SHAPE_STROKES 16
 int current_shape = SHAPE_CIRCLE;
 
 #define COLOR_RED    1
 #define COLOR_GREEN  2
 #define COLOR_BLUE   4
 #define COLOR_SAMPLE 8
+#define COLOR_SAMPLE_ONCE 16
 bool sample_color = true;
+bool sample_once = false;
 float cur_r=1.0, cur_g=0, cur_b=0;
 
 #define SIZE_LARGE 10
@@ -139,6 +142,9 @@ public:
 			drawBars();
       else if(shape == SHAPE_LINE)
          drawLines();
+      else if(shape == SHAPE_STROKES) {
+         drawStrokes();
+      }
 		else 
 			printf("Not a valid stroke type, ignoring stroke...\n");
    }
@@ -220,6 +226,25 @@ private:
       glPointSize(oldLineWidth);
    }
 
+   void drawStrokes() {
+      float oldLineWidth; 
+      glGetFloatv(GL_LINE_WIDTH, &oldLineWidth);
+
+      glLineWidth(size);
+
+      glBegin(GL_LINES);
+      // If there are an odd number of points, consider the last point
+      // to be an incomplete line and ignore it
+      for (int i = 0; i < points.size(); i++) {
+         glColor3fv(colors[i].rgb);
+         glVertex2f(1.5, 0);
+         glVertex2f(points[i].x, points[i].y);
+      }
+      glEnd();
+      glPointSize(oldLineWidth);
+
+   }
+
 };
 vector<stroke> strokes;
 
@@ -269,7 +294,7 @@ inline void sample(int x, int y) {
    float pixBuf[3];
    glReadPixels(x,img->height - y, 1,1, GL_RGB, GL_FLOAT, &pixBuf);
    //printf("found color %f, %f, %f\n", pixBuf[0], pixBuf[1], pixBuf[2]);
-   cur_r = pixBuf[RED]
+   cur_r = pixBuf[RED];
    cur_g = pixBuf[GREEN];
    cur_b = pixBuf[BLUE];
 }
@@ -297,6 +322,10 @@ void mouse(int button, int state, int x, int y) {
       printf("mouse clicked at %d %d, (%f, %f)\n", x, y, p2w_x(x), p2w_y(y));
       if (sample_color) {
          sample(x,y);
+      }
+      if (sample_once) {
+         sample_color = sample_once = false;
+         return;
       }
       strokes.back().addPoint(Point(p2w_x(x), p2w_y(y)));
       glutSetWindow(mainWin);
@@ -327,7 +356,8 @@ void keyboard(unsigned char key, int x, int y ){
 
     case 'c': case 'C' :
       strokes.clear();
-      glutPostRedisplay();
+      strokes.push_back(stroke());
+      glutPostWindowRedisplay(mainWin);
       break;
     case 'q': case 'Q' :
       exit( EXIT_SUCCESS );
@@ -348,6 +378,9 @@ void colorMenuHandler(int value) {
    sample_color = false;
    if (value == COLOR_SAMPLE) {
       sample_color = true;
+   }
+   else if (value == COLOR_SAMPLE_ONCE) {
+      sample_color = sample_once = true;
    }
    else if (value == COLOR_RED) {
       cur_r=1.0;
@@ -395,12 +428,14 @@ void doMenus() {
    glutAddMenuEntry("square", SHAPE_SQUARE);
    glutAddMenuEntry("bars", SHAPE_BARS);
    glutAddMenuEntry("line", SHAPE_LINE);
+   glutAddMenuEntry("strokes", SHAPE_STROKES);
 
    int colorMenu = glutCreateMenu(colorMenuHandler);
    glutAddMenuEntry("red", COLOR_RED);
    glutAddMenuEntry("green", COLOR_GREEN);
    glutAddMenuEntry("blue", COLOR_BLUE);
    glutAddMenuEntry("sample from image", COLOR_SAMPLE);
+   glutAddMenuEntry("sample once from image", COLOR_SAMPLE_ONCE);
 
    int sizeMenu = glutCreateMenu(sizeMenuHandler);
    glutAddMenuEntry("small", SIZE_SMALL);
@@ -445,6 +480,7 @@ int main(int argc, char **argv)
   //register the callback functions for the main window
   glutDisplayFunc( display );
   glutKeyboardFunc( keyboard );
+  //glutReshapeFunc( reshape );
 
   imgWin = glutCreateSubWindow(mainWin, 0, 0, img->width, img->height);		
 	// it is required to register a display func for 
@@ -452,6 +488,7 @@ int main(int argc, char **argv)
   glutDisplayFunc(displayImage);
   glutMouseFunc( mouse );
   glutMotionFunc( mouseMove );
+  glutKeyboardFunc( keyboard );
 
   doMenus();
   // Create a default stroke to add points to
