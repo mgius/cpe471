@@ -283,9 +283,9 @@ void display() {
 }
 
 void displayImage() { 
-  printf("image display called\n");
-  DrawImage();
-  glutSwapBuffers();
+   printf("image display called\n");
+   DrawImage();
+   glutSwapBuffers();
 }
 
 // Samples the image at a particular location. Assumes that x/y passed in
@@ -482,7 +482,10 @@ int main(int argc, char **argv)
   glutKeyboardFunc( keyboard );
   //glutReshapeFunc( reshape );
 
-  imgWin = glutCreateSubWindow(mainWin, 0, 0, img->width, img->height);		
+  //imgWin = glutCreateSubWindow(mainWin, 0, 0, img->width, img->height);		
+  glutInitWindowSize(img->width, img->height);
+  glutInitWindowPosition(50, 50);
+  imgWin = glutCreateWindow( "image" );		
 	// it is required to register a display func for 
 	// each window
   glutDisplayFunc(displayImage);
