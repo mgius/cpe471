@@ -1,0 +1,24 @@
+Shapes available are Circle, square, bars, line, and strokes
+
+Bars are a large = sign, centered at the mouse click.
+
+Line allows you to select two points and draw a line between those two points.
+Colors are sampled at the two points.
+
+Strokes creates a line from your mouse to a point off the right of the window.
+This doesn't work so well for individual strokes, but it has an interesting
+effect when used to backfill.
+
+"Sample from Image" fulfills project requirement.  "sample once from image" 
+turns the next mouseclick into a color grab, then leaves that color, no matter
+where you stroke.
+
+Backfill and Backfill sparse use different pixel jumps.
+
+Press "c" to clear the canvas.
+
+I'm aware that my "stroke" implementation is a little on the odd side.  It 
+allows me to do my two-stroke line implementation very cleanly, and in some 
+cases could improve performance significantly (especially if the function call 
+cost is very high) by grouping similar strokes so that they can be drawn in a
+single call to "draw." 

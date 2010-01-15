@@ -237,6 +237,7 @@ private:
       // to be an incomplete line and ignore it
       for (int i = 0; i < points.size(); i++) {
          glColor3fv(colors[i].rgb);
+			// Start the stroke some arbitrary distance off the screen
          glVertex2f(1.5, 0);
          glVertex2f(points[i].x, points[i].y);
       }
@@ -407,7 +408,7 @@ void sizeMenuHandler(int value) {
    strokes.push_back(stroke());
 }
 
-// base menu options.  Currently supporst backfill and backfill sparse
+// base menu options.  Currently supports backfill and backfill sparse
 void mainMenuHandler(int value) {
    if (value == 1) {
       backFill(3);
@@ -489,12 +490,12 @@ int main(int argc, char **argv)
 	// it is required to register a display func for 
 	// each window
   glutDisplayFunc(displayImage);
-  glutMouseFunc( mouse );
-  glutMotionFunc( mouseMove );
+  // I want the keyboard callback for the image window
   glutKeyboardFunc( keyboard );
 
   doMenus();
-  // Create a default stroke to add points to
+  // Create a default stroke to add points to, otherwise we'll segfault first
+  // time we call strokes.back()
   strokes.push_back(stroke());
   glutMainLoop();
 
