@@ -15,14 +15,23 @@ int GH;
 //int x;
 //int y;
 
-typedef struct Point {
+typedef struct PixelPoint {
+   int x;
+   int y;
+   PixelPoint(int x_, int y_) {
+      x = x_;
+      y = y_;
+   }
+} PixelPoint;
+
+typedef struct WorldPoint {
   float x;
   float y;
-  Point(float x_, float y_) {
+  WorldPoint(float x_, float y_) {
      x = x_;
      y = y_;
   }
-} Point;
+} WorldPoint;
 
 int mode;
 
@@ -42,44 +51,32 @@ inline float deg2rad(int deg) {
    return M_PI * deg / 180.0;
 }
 
-#define SHAPE_CIRCLE 1
+#define SHAPE_MYLINE 1
 #define SHAPE_LINE   2
 
 class stroke {
-   vector<Point> points;
+   vector<PixelPoint> points;
    int shape; // shape of stroke
 
 public:
    stroke() : shape(mode) {
    }
 
-   void addPoint(Point aPoint) {
+   void addPoint(PixelPoint aPoint) {
       points.push_back(aPoint);
    }
    // Draws a stroke to the current window
    void draw() {
-      if (shape == SHAPE_CIRCLE)
-         drawCircles();
+      if (shape == SHAPE_MYLINE)
+         drawMyLines();
       else if(shape == SHAPE_LINE)
          drawLines();
       else
          printf("Not a valid stroke type, ignoring stroke...\n");
    }
 private:
-   void drawCircles() {
-      printf("Drawing circles\n");
-      for (int j = 0; j < points.size(); j++) {
-         glBegin(GL_TRIANGLE_FAN);
-         glColor3f(1.0,0.0,0.0);
-         glVertex2f(points[j].x,points[j].y);
-         printf("Drawing a circle at %f, %f\n");
-         for (int i = 0; i < 31; i++) {
-            glVertex2f(.1 * cos(deg2rad(i*12)) + points[j].x,
-                  .1 * sin(deg2rad(i*12)) + points[j].y);
-         }
-         glEnd();
+   void drawMyLines() {
 
-      }
    }
 
    void drawLines() {
@@ -116,7 +113,7 @@ void mouse(int button, int state, int x, int y) {
     if (state == GLUT_DOWN) { /* if the left button is clicked */
       printf("mouse clicked at %d %d (%f, %f)\n", x, y, p2w_x(x), p2w_y(y) );
 
-      strokes.back().addPoint(Point(p2w_x(x),p2w_y(y)));
+      strokes.back().addPoint(PixelPoint(x, y));
       glutPostRedisplay();
 
     }
@@ -139,6 +136,7 @@ void keyboard(unsigned char key, int x, int y ){
     case 'c' : case 'C' :
       printf("Clearing points\n");
       strokes.clear();
+      strokes.push_back(stroke());
       glutPostRedisplay();
       break;
   }
@@ -154,7 +152,7 @@ void reshape( GLsizei w, GLsizei h) {
 }
 
 #define LINE_MODE 1
-#define CIRCLE_MODE 2   
+#define MYLINE_MODE 2   
 #define CLEAR 4
 void menu ( int value) {
    if (value == LINE_MODE) {
@@ -162,9 +160,9 @@ void menu ( int value) {
       mode = SHAPE_LINE;
       strokes.push_back(stroke());
    }
-   else if (value == CIRCLE_MODE) {
-      printf("Circle mode\n");
-      mode = SHAPE_CIRCLE;
+   else if (value == MYLINE_MODE) {
+      printf("myLine mode\n");
+      mode = SHAPE_MYLINE;
       strokes.push_back(stroke());
    }
    else if (value == CLEAR) {
@@ -185,7 +183,7 @@ int main( int argc, char** argv ){
 	glClearColor(1.0, 1.0, 1.0, 1.0);
   //global variable intialization
   GW = GH = 200;
-  mode = SHAPE_CIRCLE;
+  mode = SHAPE_LINE;
   strokes.push_back(stroke());
   //register the callback functions
 	glutDisplayFunc( display );
@@ -197,7 +195,7 @@ int main( int argc, char** argv ){
   // menu
   int rightMenu = glutCreateMenu(menu);
   glutAddMenuEntry("Line Mode", LINE_MODE);
-  glutAddMenuEntry("Circle Mode", CIRCLE_MODE);
+  glutAddMenuEntry("MyLine Mode", MYLINE_MODE);
   glutAddMenuEntry("Clear Points", CLEAR);
   glutAddMenuEntry("Quit", 3);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
