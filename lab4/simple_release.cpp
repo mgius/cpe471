@@ -34,6 +34,7 @@ typedef struct WorldPoint {
 } WorldPoint;
 
 int mode;
+int &current_shape = mode;
 
 //#define WorldW 2.0
 #define WorldW 2 *(float)GW / (float)GH
@@ -54,12 +55,19 @@ inline float deg2rad(int deg) {
 #define SHAPE_MYLINE 1
 #define SHAPE_LINE   2
 
+void myglVertex2f(GLfloat x, GLfloat y) {
+	//printf("dwawing world point %f, %f\n", p2w_x(x), p2w_y(y));
+	glVertex2f(p2w_x(x), p2w_y(y));
+}
+void myglVertex2fReverse(GLfloat y, GLfloat x) {
+	myglVertex2f(x, y);
+}
+
 class stroke {
    vector<PixelPoint> points;
-   int shape; // shape of stroke
 
 public:
-   stroke() : shape(mode) {
+   stroke() {
    }
 
    void addPoint(PixelPoint aPoint) {
@@ -67,27 +75,82 @@ public:
    }
    // Draws a stroke to the current window
    void draw() {
-      if (shape == SHAPE_MYLINE)
+      if (current_shape == SHAPE_MYLINE)
          drawMyLines();
-      else if(shape == SHAPE_LINE)
+      else if(current_shape == SHAPE_LINE)
          drawLines();
       else
          printf("Not a valid stroke type, ignoring stroke...\n");
    }
 private:
-   void drawMyLines() {
+	// Takes in startXY, endXY, and uses parametric line equation to
+	// fill in GL_POINTS.  Takes in an "myVertex2f" function pointer that 
+	// will be glVertex2f, or a proxy to glVertex2f that swaps X and Y first
+	void fillLine(int startX, int endX, int startY, int endY,
+			void (*myVertex2f)(GLfloat, GLfloat)) {
+		// implement parametric 
+		float cur_Y = endY;
+		float delta = (float)(endY - startY) / (float)(endX - startX);
+		printf("startX: %d, endX %d, startY %d, endY %d\n", 
+				startX, endX, startY, endY);
+		printf("delta %f\n", delta);
+		glBegin(GL_POINTS);
+		glColor3f(1.0,0.0,0.0);
+		for (int cur_X = startX; cur_X < endX; cur_X++) {
+			//printf("drawing pixel point %d, %d\n", cur_X, lroundf(cur_Y));
+			myVertex2f(cur_X, roundf(cur_Y));
+			cur_Y -= delta;
+		}
+		glEnd();
 
+	}
+   void drawMyLines() {
+		printf("Drawing My Lines\n");
+		for (int i = 0; i < (points.size() / 2); i++) {
+			int xStart = points[2 * i].x;
+			int xEnd = points[2 * i + 1].x;
+			int yStart = points[2 * i].y;
+			int yEnd = points[2 * i + 1].y;
+
+			// Swap the start / end if they're not small -> large
+			if (0 > (xEnd - xStart)) {
+			  int temp = xEnd;
+			  xEnd = xStart;
+			  xStart = temp;
+			}
+			if (0 > (yEnd - yStart)) {
+				printf("swapping Y\n");
+			  int temp = yEnd;
+			  yEnd = yStart;
+			  yStart = temp;
+			}
+
+			// Check for zero slope, infinite slope
+
+			// slope <= 1
+			if (1 >= (float)(yEnd - yStart) / (float)(xEnd - xStart)) {
+				printf("Small slope\n");
+				fillLine(xStart, xEnd, yStart, yEnd, myglVertex2f);
+			}
+			else {
+				printf("Large slope\n");
+				//fillLine(xStart, xEnd, yStart, yEnd, glVertex2f);
+				fillLine(yStart, yEnd, xStart, xEnd, myglVertex2fReverse);
+			}
+
+		}
    }
 
    void drawLines() {
       printf("Drawing Lines\n");
       glBegin(GL_LINES);
-      glColor3f(0.0,1.0,0.0);
       // floor points.size / 2 so if uneven number of points the last
       // gets dropped
       for (int i = 0; i < (points.size() / 2); i++) {
-         glVertex2f(points[2 * i].x, points[2 * i].y);
-         glVertex2f(points[2 * i + 1].x, points[2 * i + 1].y);
+			glColor3f(0.0,1.0,0.0);
+         glVertex2f(p2w_x(points[2 * i].x), p2w_y(points[2 * i].y));
+			glColor3f(1.0,0.0,0.0);
+         glVertex2f(p2w_x(points[2 * i + 1].x), p2w_y(points[2 * i + 1].y));
       }
       glEnd();
    }
@@ -158,16 +221,15 @@ void menu ( int value) {
    if (value == LINE_MODE) {
       printf("Line mode\n");
       mode = SHAPE_LINE;
-      strokes.push_back(stroke());
    }
    else if (value == MYLINE_MODE) {
       printf("myLine mode\n");
       mode = SHAPE_MYLINE;
-      strokes.push_back(stroke());
    }
    else if (value == CLEAR) {
       printf("clear");
       strokes.clear();
+		strokes.push_back(stroke());
       glutPostRedisplay();
    }
 }
