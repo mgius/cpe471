@@ -89,7 +89,7 @@ private:
 	void fillLine(int startX, int endX, int startY, int endY,
 			void (*myVertex2f)(GLfloat, GLfloat)) {
 		// implement parametric 
-		float cur_Y = endY;
+		float cur_Y = startY;
 		float delta = (float)(endY - startY) / (float)(endX - startX);
 		printf("startX: %d, endX %d, startY %d, endY %d\n", 
 				startX, endX, startY, endY);
