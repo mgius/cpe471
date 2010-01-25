@@ -99,7 +99,7 @@ private:
 		for (int cur_X = startX; cur_X < endX; cur_X++) {
 			//printf("drawing pixel point %d, %d\n", cur_X, lroundf(cur_Y));
 			myVertex2f(cur_X, roundf(cur_Y));
-			cur_Y -= delta;
+			cur_Y += delta;
 		}
 		glEnd();
 
@@ -113,27 +113,33 @@ private:
 			int yEnd = points[2 * i + 1].y;
 
 			// Swap the start / end if they're not small -> large
-			if (0 > (xEnd - xStart)) {
-			  int temp = xEnd;
-			  xEnd = xStart;
-			  xStart = temp;
-			}
-			if (0 > (yEnd - yStart)) {
-				printf("swapping Y\n");
-			  int temp = yEnd;
-			  yEnd = yStart;
-			  yStart = temp;
-			}
 
 			// Check for zero slope, infinite slope
 
 			// slope <= 1
 			if (1 >= (float)(yEnd - yStart) / (float)(xEnd - xStart)) {
 				printf("Small slope\n");
+				if (0 > (xEnd - xStart)) {
+					int temp = xEnd;
+					xEnd = xStart;
+					xStart = temp;
+					temp = yEnd;
+					yEnd = yStart;
+					yStart = temp;
+				}
 				fillLine(xStart, xEnd, yStart, yEnd, myglVertex2f);
 			}
 			else {
 				printf("Large slope\n");
+				if (0 > (yEnd - yStart)) {
+					printf("swapping Y\n");
+					int temp = yEnd;
+					yEnd = yStart;
+					yStart = temp;
+					temp = xEnd;
+					xEnd = xStart;
+					xStart = temp;
+				}
 				//fillLine(xStart, xEnd, yStart, yEnd, glVertex2f);
 				fillLine(yStart, yEnd, xStart, xEnd, myglVertex2fReverse);
 			}
