@@ -90,16 +90,21 @@ private:
 			void (*myVertex2f)(GLfloat, GLfloat)) {
 		// implement parametric 
 		float cur_Y = startY;
+		float cur_R = 1.0;
+		float cur_B = 0.0;
 		float delta = (float)(endY - startY) / (float)(endX - startX);
+		float colordelta = 1.0 / (endX - startX);
 		printf("startX: %d, endX %d, startY %d, endY %d\n", 
 				startX, endX, startY, endY);
 		printf("delta %f\n", delta);
 		glBegin(GL_POINTS);
-		glColor3f(1.0,0.0,0.0);
 		for (int cur_X = startX; cur_X < endX; cur_X++) {
 			//printf("drawing pixel point %d, %d\n", cur_X, lroundf(cur_Y));
+			glColor3f(cur_R,0.0,cur_B);
 			myVertex2f(cur_X, roundf(cur_Y));
 			cur_Y += delta;
+			cur_R -= colordelta;
+			cur_B += colordelta;
 		}
 		glEnd();
 
