@@ -13,6 +13,10 @@ int GH;
 //int x;
 //int y;
 
+// current rotation and position of triangle
+float theta = 0.0;
+float xPos = 0.0, yPos = 0.0;
+
 //#define WorldW 2.0
 #define WorldW 2 *(float)GW / (float)GH
 #define WorldH 2.0
@@ -29,12 +33,27 @@ inline float deg2rad(int deg) {
    return M_PI * deg / 180.0;
 }
 
+void idle() {
+	theta += 1.0;
+	if (theta >= 360.0)
+		theta-=360;
+	glutPostRedisplay();
+}
+
 
 //the display call back - all drawing should be done in this function
+#define TRIANGLE_SIDE_LENGTH 1.0
 void display() {
 	glClear(GL_COLOR_BUFFER_BIT);
+	glRotatef(deg2rad(theta), 0, 0, 1);
+	glBegin(GL_TRIANGLES);
+		glColor3f(1.0, 0.0, 0.0);
+		glVertex2f(TRIANGLE_SIDE_LENGTH / 2.0, -0.5);
+		glVertex2f(TRIANGLE_SIDE_LENGTH / -2.0, -0.5);
+		glVertex2f(0, -0.5 + TRIANGLE_SIDE_LENGTH * .5 * tan(deg2rad(60)));
+	glEnd();
 
-	glFlush();
+	glutSwapBuffers();
 }
 
 //the mouse button callback
@@ -80,7 +99,7 @@ void reshape( GLsizei w, GLsizei h) {
 int main( int argc, char** argv ){
 
 	glutInit( &argc, argv );
-
+	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE);
   //intializations
 	glutInitWindowSize(200, 200);
 	glutInitWindowPosition(100, 100);
@@ -94,6 +113,7 @@ int main( int argc, char** argv ){
   glutMotionFunc( mouseMove );
   glutKeyboardFunc( keyboard );
   glutReshapeFunc( reshape );
+  glutIdleFunc( idle );
 
 	glutMainLoop();
 }
