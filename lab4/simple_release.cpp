@@ -122,7 +122,7 @@ private:
 			// Check for zero slope, infinite slope
 
 			// slope <= 1
-			if (1 >= (float)(yEnd - yStart) / (float)(xEnd - xStart)) {
+			if (1 >= abs((float)(yEnd - yStart) / (float)(xEnd - xStart))) {
 				printf("Small slope\n");
 				if (0 > (xEnd - xStart)) {
 					int temp = xEnd;
