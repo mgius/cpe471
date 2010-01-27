@@ -11,4 +11,4 @@ test: Vector3D.o VectorTests.o
 	@./test
 
 clean:
-	rm -f simple_release test *.o
+	rm -f lab6 test *.o
