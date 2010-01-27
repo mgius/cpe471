@@ -7,8 +7,9 @@
 #include <iostream>
 
 int main(void) {
-	Vector3D a(1,2,3);
-	Vector3D b(5,4,6,7,8,9);
+	Vector3D a,b,c,d;
+	a = Vector3D(1,2,3);
+	b = Vector3D(5,4,6,7,8,9);
 	
 	// constructor tests
 	std::cout << "Testing constructors" << std::endl;
@@ -23,6 +24,17 @@ int main(void) {
 	assert(b.yPos == 8);
 	assert(b.zPos == 9);
 
+	// Testing ==
+	a = Vector3D(1,2,3);
+	b = Vector3D(1,2,3);
+	assert(a == a);
+	assert(a == b);
+
+
+	// Length tests
+	a = Vector3D(4,0,3);
+	assert(a.length() == 5.0);
+
 	// dotProd Tests
 	std::cout << "Testing dot product" << std::endl;
 	a = Vector3D(1,2,3);
@@ -30,19 +42,38 @@ int main(void) {
 	assert(a.dotProd(b) == 46);
 
 	// perpindicular
-	std::cout << "\t...Perpindicular Case" << std::endl;
+	std::cout << "   ...Perpindicular Case" << std::endl;
 	a = Vector3D(1,0,0);
 	b = Vector3D(0,1,0);
 	assert(a.dotProd(b) == 0);
 
 	// parallel
-	std::cout << "\t...Parallel Case" << std::endl;
+	std::cout << "   ...Parallel Case" << std::endl;
 	a = Vector3D(1,2,3);
 	assert(a.dotProd(a) == 14);
 
 	// crossProd Tests
+	std::cout << "Testing cross product" << std::endl;
 	a = Vector3D(1,2,3);
 	b = Vector3D(5,7,9);
+	c = a.crossProd(b);
+	d = Vector3D(-3, 6, -3);
+	assert(c == d);
+
+	// perpindicular
+	std::cout << "   ...Perpindicular Case" << std::endl;
+	a = Vector3D(1,0,0);
+	b = Vector3D(0,1,0);
+	c = a.crossProd(b);
+	d = Vector3D(0,0,1);
+	assert(c == d);
+	
+	// parallel
+	std::cout << "   ...Parallel Case" << std::endl;
+	a = Vector3D(1,2,3);
+	b = a.crossProd(a);
+	c = Vector3D(0,0,0);
+	assert(b == c);
 
 }
 
