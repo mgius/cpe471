@@ -33,10 +33,11 @@ inline float deg2rad(int deg) {
    return M_PI * deg / 180.0;
 }
 
-void idle() {
+void idle(int) {
 	theta += 1.0;
 	if (theta >= 360.0)
-		theta-=360;
+		theta-=360.0;
+	glutTimerFunc(100, idle, 0);
 	glutPostRedisplay();
 }
 
@@ -44,14 +45,17 @@ void idle() {
 //the display call back - all drawing should be done in this function
 #define TRIANGLE_SIDE_LENGTH 1.0
 void display() {
+	printf("display %f\n", theta);
 	glClear(GL_COLOR_BUFFER_BIT);
-	glRotatef(deg2rad(theta), 0, 0, 1);
+	glPushMatrix();
+	glRotatef(theta, 0, 0, 1);
 	glBegin(GL_TRIANGLES);
 		glColor3f(1.0, 0.0, 0.0);
-		glVertex2f(TRIANGLE_SIDE_LENGTH / 2.0, -0.5);
-		glVertex2f(TRIANGLE_SIDE_LENGTH / -2.0, -0.5);
-		glVertex2f(0, -0.5 + TRIANGLE_SIDE_LENGTH * .5 * tan(deg2rad(60)));
+		glVertex2f(cos(deg2rad(0)), sin(deg2rad(0)));
+		glVertex2f(cos(deg2rad(120)), sin(deg2rad(120)));
+		glVertex2f(cos(deg2rad(240)), sin(deg2rad(240)));
 	glEnd();
+	glPopMatrix();
 
 	glutSwapBuffers();
 }
@@ -113,7 +117,7 @@ int main( int argc, char** argv ){
   glutMotionFunc( mouseMove );
   glutKeyboardFunc( keyboard );
   glutReshapeFunc( reshape );
-  glutIdleFunc( idle );
+  glutTimerFunc( 1, idle, 0 );
 
 	glutMainLoop();
 }
