@@ -1,4 +1,5 @@
 class Vector3D {
+private:
 	float x,y,z;
 	float xPos, yPos, zPos;
 
@@ -14,7 +15,9 @@ public:
 	void draw();
 	void length();
 
-	Vector3D dotProd(Vector3D &right);
+	float dotProd(Vector3D &right);
 
 	Vector3D crossProd(Vector3D &right);
+
+	bool operator==(Vector3D &right);
 };

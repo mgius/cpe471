@@ -10,10 +10,14 @@ void Vector3D::length() {
 
 }
 
-Vector3D Vector3D::dotProd(Vector3D &right) {
+float Vector3D::dotProd(Vector3D &right) {
 
 }
 
 Vector3D Vector3D::crossProd(Vector3D &right) {
+
+}
+
+bool Vector3D::operator==(Vector3D &right) {
 
 }
