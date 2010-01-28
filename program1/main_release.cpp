@@ -493,6 +493,9 @@ int main(int argc, char **argv)
   // I want the keyboard callback for the image window
   glutKeyboardFunc( keyboard );
 
+  glutMotionFunc( mouseMove );
+  glutMouseFunc( mouse );
+
   doMenus();
   // Create a default stroke to add points to, otherwise we'll segfault first
   // time we call strokes.back()
