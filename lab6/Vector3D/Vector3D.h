@@ -13,12 +13,21 @@ public:
 		xPos = yPos = zPos = 0;
 	}
 
+	void set(float _x, float _y, float _z);
+
 	void draw() const;
 	float length() const;
+
 
 	float dotProd(const Vector3D &right) const;
 
 	Vector3D crossProd(const Vector3D &right) const;
 
 	bool operator==(const Vector3D &right) const;
+
+	Vector3D operator+(const Vector3D &right) const;
+	Vector3D &operator+=(const Vector3D &right);
+	Vector3D operator-(const Vector3D &right) const;
+	Vector3D &operator-=(const Vector3D &right);
+
 };

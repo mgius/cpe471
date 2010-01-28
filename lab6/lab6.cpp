@@ -3,6 +3,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "Vector3D/Vector3D.h"
+#include <vector>
 
 using namespace std;
 //global variables - necessary evil when using GLUT
@@ -31,31 +33,47 @@ inline float deg2rad(int deg) {
    return M_PI * deg / 180.0;
 }
 
+vector<Vector3D> vectors;
 
 //the display call back - all drawing should be done in this function
 void display() {
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	for (int i = 0; i < vectors.size(); i++) {
+		vectors[i].draw();
+	}
+
 	glutSwapBuffers();
 }
+
+int lastMouseX;
+int lastMouseY;
 
 //the mouse button callback
 void mouse(int button, int state, int x, int y) {
   if (button == GLUT_LEFT_BUTTON) {
     if (state == GLUT_DOWN) { /* if the left button is clicked */
-
+		 printf("mouse down\n");
+		 vectors.push_back(Vector3D(0,0,0,p2w_x(x),p2w_y(y),0));
+		 lastMouseX = x;
+		 lastMouseY = y;
+		 glutPostRedisplay();
     }
 	 if (state == GLUT_UP) {
-
+		 printf("Length of last vector: %f\n", vectors.back().length());
 	 }
   }
 }
 
 //the mouse move callback
 void mouseMove(int x, int y) {
-  printf("mouse moved at %d %d\n", x, y);
-  // shouldn't do anything on move
-
+  //printf("mouse moved at %d %d\n", x, y);
+  vectors.back().operator-=(Vector3D(p2w_x(lastMouseX) - p2w_x(x), 
+			                            p2w_y(lastMouseY) - p2w_y(y),
+												 0));
+  lastMouseX = x;
+  lastMouseY = y;
+  glutPostRedisplay();
 }
 
 //the keyboard callback

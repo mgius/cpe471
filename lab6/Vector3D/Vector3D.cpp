@@ -1,8 +1,39 @@
 #include "Vector3D.h"
 #include "math.h"
+#include "GL/glut.h"
+#include <stdio.h>
+
+// Sets the direction/magnitude of the vector.  Doesn't move it
+
+void Vector3D::set(float _x, float _y, float _z) {
+	x = _x;
+	y = _y;
+	z = _z;
+}
 
 // Draws the vector.  Currently draws in 2D space
 void Vector3D::draw() const {
+	//printf("Drawing vector at %f, %f, going to %f, %f\n",
+	//		xPos, yPos, xPos + x, yPos + y);
+
+	glColor3f(1.0, 0,0);
+	int oldPointSize;
+	glGetIntegerv(GL_POINT_SIZE, &oldPointSize);
+	glPointSize(5);
+	glBegin(GL_POINTS);
+	{
+		glVertex2f(xPos, yPos);
+	}
+	glEnd();
+	glPointSize(oldPointSize);
+
+
+	glBegin(GL_LINES);
+	{
+		glVertex2f(xPos, yPos);
+		glVertex2f(xPos + x, yPos + y);
+	}
+	glEnd();
 }
 
 
@@ -29,4 +60,28 @@ float Vector3D::length() const {
 bool Vector3D::operator==(const Vector3D &right) const {
 	return x == right.x and y == right.y and z == right.z and
 		xPos == right.xPos and yPos == right.yPos and zPos == right.zPos;
+}
+
+// Adds the two vectors together.  Uses the left vectors position
+Vector3D Vector3D::operator+(const Vector3D &right) const {
+	return Vector3D(x + right.x, y + right.y, z + right.z, xPos, yPos, zPos);
+}
+
+// Adds the right vector to this one. Leaves position unmodified
+Vector3D &Vector3D::operator+=(const Vector3D &right) {
+	x += right.x;
+	y += right.y;
+	z += right.z;
+}
+
+// Subtracts one vector from another  Uses the left vectors position
+Vector3D Vector3D::operator-(const Vector3D &right) const {
+	return Vector3D(x - right.x, y - right.y, z - right.z, xPos, yPos, zPos);
+}
+
+// Adds the right vector to this one. Leaves position unmodified
+Vector3D &Vector3D::operator-=(const Vector3D &right) {
+	x -= right.x;
+	y -= right.y;
+	z -= right.z;
 }
