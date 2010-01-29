@@ -72,6 +72,7 @@ Vector3D &Vector3D::operator+=(const Vector3D &right) {
 	x += right.x;
 	y += right.y;
 	z += right.z;
+	return *this;
 }
 
 // Subtracts one vector from another  Uses the left vectors position
@@ -84,4 +85,5 @@ Vector3D &Vector3D::operator-=(const Vector3D &right) {
 	x -= right.x;
 	y -= right.y;
 	z -= right.z;
+	return *this;
 }

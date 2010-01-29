@@ -97,7 +97,7 @@ void reshape( GLsizei w, GLsizei h) {
    gluOrtho2D(-(float)w/h, (float)w/h, -1, 1);
 }
 
-int main( int argc, char** argv ){
+int main( int argc, char** argv ) {
 
 	glutInit( &argc, argv );
 	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE);

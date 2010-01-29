@@ -30,6 +30,16 @@ int main(void) {
 	assert(a == a);
 	assert(a == b);
 
+	// += Tests
+	a = Vector3D(1,2,3);
+	b = Vector3D(4,7,10);
+	c = Vector3D(20,100,244);
+	d = Vector3D(25, 109, 257);
+
+	a += b + c;
+	assert(a == d);
+
+
 
 	// Length tests
 	a = Vector3D(4,0,3);
