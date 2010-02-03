@@ -45,6 +45,14 @@ int main(void) {
 	a = Vector3D(4,0,3);
 	assert(a.length() == 5.0);
 
+	// Translate tests
+	
+	a = Vector3D(0,0,0, 4,0,3);
+	a.translate(2,7,9);
+	assert(a.xPos == 6);
+	assert(a.yPos == 7);
+	assert(a.zPos == 12);
+
 	// dotProd Tests
 	std::cout << "Testing dot product" << std::endl;
 	a = Vector3D(1,2,3);

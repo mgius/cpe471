@@ -23,7 +23,10 @@ public:
 
 	Vector3D crossProd(const Vector3D &right) const;
 
+	Vector3D &translate(float, float, float);
+
 	bool operator==(const Vector3D &right) const;
+
 
 	Vector3D operator+(const Vector3D &right) const;
 	Vector3D &operator+=(const Vector3D &right);

@@ -51,6 +51,13 @@ Vector3D Vector3D::crossProd(const Vector3D &right) const {
 						 x * right.y - y * right.x);
 }
 
+Vector3D &Vector3D::translate(float _x, float _y, float _z) {
+	xPos += _x;
+	yPos += _y;
+	zPos += _z;
+	return *this;
+}
+
 // Returns the length of the vector (which happens to be the sqrt of dotProd)
 float Vector3D::length() const {
 	return sqrt(dotProd(*this));
