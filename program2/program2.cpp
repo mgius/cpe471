@@ -8,10 +8,30 @@
 #include <math.h>
 #include <assert.h>
 
+#include <vector>
+#include "Vector3D/Vector3D.h"
+
 int GW;
 int GH;
 
-int startx, starty;
+#define WorldW 4.0 *(float)GW / (float)GH
+#define WorldH 4.0
+inline float p2w_x(float w) {
+   //float WorldW = 2 * (float) GW / (float) GH;
+   return WorldW / GW * w - WorldW / 2;
+}
+
+inline float p2w_y(float h) {
+   return -1 * (WorldH / GH * h - WorldH / 2);
+}
+
+inline float deg2rad(int deg) {
+   return M_PI * deg / 180.0;
+}
+
+inline float rad2deg(float rad) {
+	return rad * 180.0 / M_PI;
+}
 
 /*an example of a simple data structure to store a 4x4 matrix */
 GLfloat objectM[4][4] = {
@@ -22,6 +42,9 @@ GLfloat objectM[4][4] = {
 };
 
 GLfloat *trackballM = (GLfloat *)objectM;
+
+Vector3D startClick;
+Vector3D endClick;
 
 /*incomplete drawing of a 3d wireframe cube - needs to be completed */
 void drawcube() {
@@ -91,20 +114,56 @@ void reshape(int w, int h) {
 
 }
 
+int lastMouseX;
+int lastMouseY;
+
 
 void mouse(int button, int state, int x, int y) {
+	// Rotate
 	if (button == GLUT_LEFT_BUTTON) {
 		if (state == GLUT_DOWN) { /* if the left button is clicked */
-			printf("mouse clicked at %d %d\n", x, GH-y-1);
-			startx = x;
-			starty = GH-y-1;
+			printf("left mouse clicked at %d %d\n", x, y);
+			lastMouseX = x;
+			lastMouseY = y;
+			startClick = Vector3D(p2w_x(x), p2w_y(y),0);
+			endClick = Vector3D(p2w_x(x), p2w_y(y),0);
 		} 
+		if (state == GLUT_UP) {
+
+		}
+	}
+	// Move (translate)
+	if (button == GLUT_RIGHT_BUTTON) {
+		if (state == GLUT_DOWN) { /* if the left button is clicked */
+			printf("right mouse clicked at %d %d\n", x, y);
+			lastMouseX = x;
+			lastMouseY = y;
+			startClick = Vector3D(p2w_x(x), p2w_y(y),0);
+			endClick = Vector3D(p2w_x(x), p2w_y(y),0);
+		} 
+		if (state == GLUT_UP) {
+
+		}
+
+	}
+	// Zoom (scale)
+	if (button == GLUT_MIDDLE_BUTTON) {
+		if (state == GLUT_DOWN) { /* if the left button is clicked */
+			printf("middle mouse clicked at %d %d\n", x, y);
+			lastMouseX = x;
+			lastMouseY = y;
+			startClick = Vector3D(p2w_x(x), p2w_y(y),0);
+			endClick = Vector3D(p2w_x(x), p2w_y(y),0);
+		} 
+		if (state == GLUT_UP) {
+
+		}
 	}
 }
 
 void mouseMove(int x, int y) {
-	printf("mouse moved at %d %d\n", x, GH-y-1);
-	//.....
+	printf("mouse moved at %d %d\n", x, y);
+	endClick = Vector3D(p2w_x(x), p2w_y(y), 0);
 	glutPostRedisplay();
 }
 
@@ -133,7 +192,6 @@ int main(int argc, char** argv) {
 	//initialize  globals
 	GW = 400;
 	GH = 400;
-	startx = starty = 0;
 	glutInit(&argc, argv);
 	glutInitWindowSize(400, 400);
 	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
