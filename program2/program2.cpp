@@ -14,6 +14,12 @@
 int GW;
 int GH;
 
+#define MODE_NONE      0
+#define MODE_TRANSLATE 1
+#define MODE_ROTATE    2
+#define MODE_SCALE     4
+int mode;
+
 #define WorldW 4.0 *(float)GW / (float)GH
 #define WorldH 4.0
 inline float p2w_x(float w) {
@@ -43,44 +49,76 @@ GLfloat objectM[4][4] = {
 
 GLfloat *trackballM = (GLfloat *)objectM;
 
+GLfloat translateM[3] = {0.0, 0.0, 0.0};
+
 Vector3D startClick;
 Vector3D endClick;
 
 /*incomplete drawing of a 3d wireframe cube - needs to be completed */
 void drawcube() {
-	glBegin(GL_LINE_LOOP);
-	glColor3f(0.5, 0.5, 0.5); 
-	glVertex3f(-0.5, -0.5, -0.5); //v1
+	glBegin(GL_LINE_LOOP); {
+		glColor3f(0.5, 0.5, 0.5); 
+		glVertex3f(-0.5, -0.5, -0.5); //v1
 
-	glColor3f(1.0, 0.0, 0.0); //red
-	glVertex3f(0.5, -0.5, -0.5); //v2
+		glColor3f(1.0, 0.0, 0.0); //red
+		glVertex3f(0.5, -0.5, -0.5); //v2
 
-	glColor3f(1.0, 1.0, 0.0); //r-g
-	glVertex3f(0.5, 0.5, -0.5); //v3
+		glColor3f(1.0, 1.0, 0.0); //r-g
+		glVertex3f(0.5, 0.5, -0.5); //v3
 
-	glColor3f(0.0, 1.0, 0.0); //green
-	glVertex3f(-0.5, 0.5, -0.5); //v4
+		glColor3f(0.0, 1.0, 0.0); //green
+		glVertex3f(-0.5, 0.5, -0.5); //v4
 
-	glColor3f(0.0, 1.0, 1.0); //g-b
-	glVertex3f(-0.5, 0.5, 0.5); //v5
+		glColor3f(0.0, 1.0, 1.0); //g-b
+		glVertex3f(-0.5, 0.5, 0.5); //v5
 
-	glColor3f(0.95, 0.95, 0.95); 
-	glVertex3f(0.5, 0.5, 0.5); //v6
+		glColor3f(0.95, 0.95, 0.95); 
+		glVertex3f(0.5, 0.5, 0.5); //v6
 
-	glColor3f(1.0, 0.0, 1.0);
-	glVertex3f(0.5, -0.5, 0.5); //v7
+		glColor3f(1.0, 0.0, 1.0);
+		glVertex3f(0.5, -0.5, 0.5); //v7
 
-	glColor3f(0.0, 0.0, 1.0);
-	glVertex3f(-0.5, -0.5, 0.5); //v8
-	glEnd();
+		glColor3f(0.0, 0.0, 1.0);
+		glVertex3f(-0.5, -0.5, 0.5); //v8
+	} glEnd();
 
-	glBegin(GL_LINES);
-	glColor3f(0.0, 0.0, 0.0); //white
-	glVertex3f(-0.5, -0.5, -0.5); //v1
-	glColor3f(0.0, 1.0, 0.0); //green
-	glVertex3f(-0.5, 0.5, -0.5);  //v4
-	glEnd();
+	glBegin(GL_LINES); {
+		glColor3f(0.0, 0.0, 0.0); //white
+		glVertex3f(-0.5, -0.5, -0.5); //v1
+		glColor3f(0.0, 1.0, 0.0); //green
+		glVertex3f(-0.5, 0.5, -0.5);  //v4
+	} glEnd();
 
+}
+
+bool axesOn = true;
+// Draws the axes of the world.  Should be run before any transformations
+void drawAxes() {
+	GLfloat oldWidth;
+	glGetFloatv(GL_LINE_WIDTH, &oldWidth);
+	glLineWidth(3.0);
+	// X axis
+	glBegin(GL_LINES); {
+		glColor3f(0.5, 0, 0);
+		glVertex3f(-1.0, 0, 0);
+		glVertex3f(1.0,0,0);
+	} glEnd();
+
+	// Y axis
+	glBegin(GL_LINES); {
+		glColor3f(0, 0.5, 0);
+		glVertex3f(0, -1.0, 0);
+		glVertex3f(0,1.0,0);
+	} glEnd();
+
+	// Z axis
+	glBegin(GL_LINES); {
+		glColor3f(0, 0, .5);
+		glVertex3f(0, 0, -1.0);
+		glVertex3f(0,0,1.0);
+	} glEnd();
+
+	glLineWidth(oldWidth);
 }
 
 void display() {
@@ -93,9 +131,16 @@ void display() {
 	//delete the two rotation transforms - they are included 
 	// just to show that the cube is partial and 3D
 	glLoadIdentity();
-	glRotatef(-45,  0, 1, 0);
-	glRotatef(45, 1, 0, 0);
-	drawcube();
+	if (axesOn)
+		drawAxes();
+
+	// Translate
+	glPushMatrix(); {
+		glTranslatef(translateM[0], translateM[1], translateM[2]);
+		glRotatef(-45,  0, 1, 0);
+		glRotatef(45, 1, 0, 0);
+		drawcube();
+	} glPopMatrix();
 
 	glutSwapBuffers();
 
@@ -136,10 +181,10 @@ void mouse(int button, int state, int x, int y) {
 	if (button == GLUT_RIGHT_BUTTON) {
 		if (state == GLUT_DOWN) { /* if the left button is clicked */
 			printf("right mouse clicked at %d %d\n", x, y);
+			mode = MODE_TRANSLATE;
+
 			lastMouseX = x;
 			lastMouseY = y;
-			startClick = Vector3D(p2w_x(x), p2w_y(y),0);
-			endClick = Vector3D(p2w_x(x), p2w_y(y),0);
 		} 
 		if (state == GLUT_UP) {
 
@@ -164,13 +209,24 @@ void mouse(int button, int state, int x, int y) {
 void mouseMove(int x, int y) {
 	printf("mouse moved at %d %d\n", x, y);
 	endClick = Vector3D(p2w_x(x), p2w_y(y), 0);
-	glutPostRedisplay();
+	if (mode == MODE_TRANSLATE) {
+		translateM[0] -= p2w_x(lastMouseX) - p2w_x(x);
+		translateM[1] -= p2w_y(lastMouseY) - p2w_y(y);
+		lastMouseX = x;
+		lastMouseY = y;
+		glutPostRedisplay();
+	}
 }
 
 
 void keyboard(unsigned char key, int x, int y )
 {
 	switch( key ) {
+	case 'a': case 'A' :
+		axesOn = !axesOn;
+		glutPostRedisplay();
+		break;
+
 	case 'q': case 'Q' :
 		exit( EXIT_SUCCESS );
 		break;
