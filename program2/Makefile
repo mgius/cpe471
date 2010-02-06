@@ -1,18 +1,20 @@
 VPATH = Vector3D
 GL=-lGL -lglut
-HANDINFILES=*.cpp *.h images/created/*.jpg Makefile README
+HANDINFILES=*.cpp Vector3D/* Makefile README
+TARFILE=mgius_program2.tar
+HANDINDIR=csc471p2
 
 all: program2
 
 program2: program2.o Vector3D.o
 	g++ -o prog2 $(GL) program2.o Vector3D.o
 
-#mkpackage: program2
-#	tar -cf mgius_program1.tar $(HANDINFILES)
-#
-#handin: mkpackage
-#	handin zwood csc471p1 mgius_program1.tar
-#
+mkpackage: program2
+	tar -cf $(TARFILE) $(HANDINFILES)
+
+handin: mkpackage
+	handin zwood $(HANDINDIR) $(TARFILE)
+
 
 test: Vector3D.o VectorTests.o
 	g++ $(GL) -lm -o test Vector3D.o VectorTests.o
@@ -20,4 +22,4 @@ test: Vector3D.o VectorTests.o
 	@./test
 
 clean:
-	rm -f *.o prog2 mgius_program2.tar test
+	rm -f *.o prog2 $(TARFILE) test

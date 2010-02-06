@@ -1,5 +1,6 @@
 Translation is managed by the right mouse button.  Click and drag the right
- mouse button anywhere to move the cube.
+ mouse button anywhere to move the cube. You don't have to be on the cube to
+ click it
 
 Rotation is managed by the left mouse button.  The "trackball" is centered in
  the window, even if the cube is translated to another location.  When the
@@ -10,3 +11,5 @@ Rotation is managed by the left mouse button.  The "trackball" is centered in
 Scaling is managed by the middle mouse button.  Slide the mouse to the right
  to scale up, slide the mouse to the left to scale down. There are bounds on 
  the scale.
+
+"m" to switch cube modes, "r" to reset
