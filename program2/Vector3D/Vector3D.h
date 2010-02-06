@@ -31,6 +31,7 @@ public:
 	Vector3D &translate(float, float, float);
 
 	void bindZ();
+	void scaleToOne();
 
 	bool operator==(const Vector3D &right) const;
 
@@ -40,7 +41,7 @@ public:
 	Vector3D operator-(const Vector3D &right) const;
 	Vector3D &operator-=(const Vector3D &right);
 	friend std::ostream& operator<< (std::ostream &out, const Vector3D &v) {
-		out << "X: " << v.x << "Y: " << v.y << "Z: " << v.z;
+		out << "X: " << v.x << " Y: " << v.y << " Z: " << v.z;
 
 		return out;
 	}

@@ -1,2 +1,12 @@
 Translation is managed by the right mouse button.  Click and drag the right
  mouse button anywhere to move the cube.
+
+Rotation is managed by the left mouse button.  The "trackball" is centered in
+ the window, even if the cube is translated to another location.  When the
+ mouse is "outside" the trackball, the cube is rotated purely around the z
+ axis.  The trackball maintains its scale, so a very wide window will have
+ a comparatively small trackball.
+
+Scaling is managed by the middle mouse button.  Slide the mouse to the right
+ to scale up, slide the mouse to the left to scale down. There are bounds on 
+ the scale.

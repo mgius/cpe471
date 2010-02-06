@@ -61,12 +61,21 @@ Vector3D &Vector3D::translate(float _x, float _y, float _z) {
 // Assuming Z is zero, bind a "z" such that this vector has length 1
 // TODO: make this handle vectors already 1 or longer
 void Vector3D::bindZ() {
-	z = sqrt(1 - x*x - y*y);
+	float underTheSqrt = 1.0 - x*x - y*y;
+	z = underTheSqrt < 0 ? 0 : sqrtf(underTheSqrt);
+}
+
+void Vector3D::scaleToOne() {
+	if (length() > 1.0) {
+		x /= length();
+		y /= length();
+		z /= length();
+	}
 }
 
 // Returns the length of the vector (which happens to be the sqrt of dotProd)
 float Vector3D::length() const {
-	return sqrt(dotProd(*this));
+	return sqrtf(dotProd(*this));
 }
 
 // Two vectors are the same if their direction, length, and anchor are the same

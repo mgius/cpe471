@@ -178,8 +178,10 @@ void mouse(int button, int state, int x, int y) {
 			printf("left mouse clicked at %d %d\n", x, y);
 			mode = MODE_ROTATE;
 			startClick = Vector3D(p2w_x(x), p2w_y(y),0);
+			startClick.scaleToOne();
 			startClick.bindZ();
 			endClick = Vector3D(p2w_x(x), p2w_y(y),0);
+			endClick.scaleToOne();
 			endClick.bindZ();
 		} 
 		if (state == GLUT_UP) {
@@ -213,7 +215,7 @@ void mouse(int button, int state, int x, int y) {
 }
 
 void mouseMove(int x, int y) {
-	printf("mouse moved at %d %d\n", x, y);
+	//printf("mouse moved at %d %d\n", x, y);
 	if (mode == MODE_TRANSLATE) {
 		translateM[0] -= p2w_x(lastMouseX) - p2w_x(x);
 		translateM[1] -= p2w_y(lastMouseY) - p2w_y(y);
@@ -225,20 +227,29 @@ void mouseMove(int x, int y) {
 		if (lastMouseX > x) {
 			// moving left, shrink
 			scaleM[0] = scaleM[1] -= .01;
+			if (scaleM[0] <= 0.1) {
+				scaleM[0] = scaleM[1] = .1;
+			}
 		}
 		else {
 			//moving right, grow
 			scaleM[0] = scaleM[1] += .01;
+			if (scaleM[0] >= 3.0) {
+				scaleM[0] = scaleM[1] = 3.0;
+			}
 		}
 		lastMouseX = x;
 		glutPostRedisplay();
 	}
 	if (mode == MODE_ROTATE) {
 		endClick = Vector3D(p2w_x(x), p2w_y(y), 0);
+		endClick.scaleToOne();
 		endClick.bindZ();
-		Vector3D axisRot = endClick.crossProd(startClick);
+		Vector3D axisRot = startClick.crossProd(endClick);
 		float angleInDeg = rad2deg(findAngle(startClick, endClick));
-		cout << axisRot << endl;
+		cout << "start: " << startClick <<  " length: " << startClick.length() << endl;
+		cout << "end: " << endClick <<  " length: " << endClick.length() << endl;
+		cout << "axis: " << axisRot << endl;
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix(); {
 			glLoadIdentity();
@@ -246,6 +257,7 @@ void mouseMove(int x, int y) {
 			glMultMatrixf(trackballM);
 			glGetFloatv(GL_MODELVIEW_MATRIX, trackballM);
 		} glPopMatrix();
+		startClick = endClick;
 		glutPostRedisplay();
 	}
 }
@@ -269,6 +281,8 @@ void keyboard(unsigned char key, int x, int y )
 		glLoadIdentity();
 		glGetFloatv(GL_MODELVIEW_MATRIX, trackballM);
 		glPopMatrix();
+		scaleM[0] = scaleM[1] = scaleM[2] = 1.0;
+		translateM[0] = translateM[1] = translateM[2] = 0.0;
 		glutPostRedisplay();
 		break;
 	}
