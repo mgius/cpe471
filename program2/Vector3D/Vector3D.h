@@ -1,3 +1,4 @@
+#include <ostream>
 class Vector3D {
 private:
 	float x,y,z;
@@ -15,6 +16,10 @@ public:
 
 	void set(float _x, float _y, float _z);
 
+	float getX() { return x; }
+	float getY() { return y; }
+	float getZ() { return z; }
+
 	void draw() const;
 	float length() const;
 
@@ -25,6 +30,8 @@ public:
 
 	Vector3D &translate(float, float, float);
 
+	void bindZ();
+
 	bool operator==(const Vector3D &right) const;
 
 
@@ -32,5 +39,11 @@ public:
 	Vector3D &operator+=(const Vector3D &right);
 	Vector3D operator-(const Vector3D &right) const;
 	Vector3D &operator-=(const Vector3D &right);
+	friend std::ostream& operator<< (std::ostream &out, const Vector3D &v) {
+		out << "X: " << v.x << "Y: " << v.y << "Z: " << v.z;
+
+		return out;
+	}
 
 };
+

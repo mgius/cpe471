@@ -58,6 +58,12 @@ Vector3D &Vector3D::translate(float _x, float _y, float _z) {
 	return *this;
 }
 
+// Assuming Z is zero, bind a "z" such that this vector has length 1
+// TODO: make this handle vectors already 1 or longer
+void Vector3D::bindZ() {
+	z = sqrt(1 - x*x - y*y);
+}
+
 // Returns the length of the vector (which happens to be the sqrt of dotProd)
 float Vector3D::length() const {
 	return sqrt(dotProd(*this));
@@ -94,3 +100,4 @@ Vector3D &Vector3D::operator-=(const Vector3D &right) {
 	z -= right.z;
 	return *this;
 }
+

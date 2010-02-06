@@ -8,8 +8,11 @@
 #include <math.h>
 #include <assert.h>
 
+#include <iostream>
 #include <vector>
 #include "Vector3D/Vector3D.h"
+
+using namespace std;
 
 int GW;
 int GH;
@@ -37,6 +40,10 @@ inline float deg2rad(int deg) {
 
 inline float rad2deg(float rad) {
 	return rad * 180.0 / M_PI;
+}
+
+float findAngle(Vector3D &a, Vector3D &b) {
+	return acos(a.dotProd(b) / (fabs(a.length()) * fabs(b.length())));
 }
 
 /*an example of a simple data structure to store a 4x4 matrix */
@@ -139,8 +146,7 @@ void display() {
 	glPushMatrix(); {
 		glTranslatef(translateM[0], translateM[1], translateM[2]);
 		glScalef(scaleM[0], scaleM[1], scaleM[2]);
-		glRotatef(-45,  0, 1, 0);
-		glRotatef(45, 1, 0, 0);
+		glMultMatrixf(trackballM);
 		drawcube();
 	} glPopMatrix();
 
@@ -170,13 +176,13 @@ void mouse(int button, int state, int x, int y) {
 	if (button == GLUT_LEFT_BUTTON) {
 		if (state == GLUT_DOWN) { /* if the left button is clicked */
 			printf("left mouse clicked at %d %d\n", x, y);
-			lastMouseX = x;
-			lastMouseY = y;
+			mode = MODE_ROTATE;
 			startClick = Vector3D(p2w_x(x), p2w_y(y),0);
+			startClick.bindZ();
 			endClick = Vector3D(p2w_x(x), p2w_y(y),0);
+			endClick.bindZ();
 		} 
 		if (state == GLUT_UP) {
-
 		}
 	}
 	// Move (translate)
@@ -208,7 +214,6 @@ void mouse(int button, int state, int x, int y) {
 
 void mouseMove(int x, int y) {
 	printf("mouse moved at %d %d\n", x, y);
-	endClick = Vector3D(p2w_x(x), p2w_y(y), 0);
 	if (mode == MODE_TRANSLATE) {
 		translateM[0] -= p2w_x(lastMouseX) - p2w_x(x);
 		translateM[1] -= p2w_y(lastMouseY) - p2w_y(y);
@@ -226,6 +231,21 @@ void mouseMove(int x, int y) {
 			scaleM[0] = scaleM[1] += .01;
 		}
 		lastMouseX = x;
+		glutPostRedisplay();
+	}
+	if (mode == MODE_ROTATE) {
+		endClick = Vector3D(p2w_x(x), p2w_y(y), 0);
+		endClick.bindZ();
+		Vector3D axisRot = endClick.crossProd(startClick);
+		float angleInDeg = rad2deg(findAngle(startClick, endClick));
+		cout << axisRot << endl;
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix(); {
+			glLoadIdentity();
+			glRotatef(angleInDeg, axisRot.getX(), axisRot.getY(), axisRot.getZ());
+			glMultMatrixf(trackballM);
+			glGetFloatv(GL_MODELVIEW_MATRIX, trackballM);
+		} glPopMatrix();
 		glutPostRedisplay();
 	}
 }
