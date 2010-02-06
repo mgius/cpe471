@@ -62,41 +62,109 @@ GLfloat scaleM[3] = {1.0, 1.0, 1.0};
 Vector3D startClick;
 Vector3D endClick;
 
+float cubeVertexes[9][3] = {
+	{ 0.0,  0.0,  0.0}, // filler
+	{-0.5, -0.5, -0.5}, //v1
+	{ 0.5, -0.5, -0.5}, //v2
+	{ 0.5,  0.5, -0.5}, //v3
+	{-0.5,  0.5, -0.5}, //v4
+	{-0.5,  0.5,  0.5}, //v5
+	{ 0.5,  0.5,  0.5}, //v6
+	{ 0.5, -0.5,  0.5}, //v7
+	{-0.5, -0.5,  0.5}  //v8
+};
+float cubeColors[9][3] = {
+	{0.0, 0.0, 0.0},  // filler
+	{0.5, 0.5, 0.5}, //v1
+	{1.0, 0.0, 0.0}, //v2
+	{1.0, 1.0, 0.0}, //v3
+	{0.0, 1.0, 0.0}, //v4
+	{0.0, 1.0, 1.0}, //v5
+	{0.95, 0.95, 0.95}, //v6
+	{1.0, 0.0, 1.0}, //v7
+	{0.0, 0.0, 1.0}  //v8
+};
+
+
+bool wireFrame = true;
 /*incomplete drawing of a 3d wireframe cube - needs to be completed */
 void drawcube() {
-	glBegin(GL_LINE_LOOP); {
-		glColor3f(0.5, 0.5, 0.5); 
-		glVertex3f(-0.5, -0.5, -0.5); //v1
+	if (wireFrame) {
+		glBegin(GL_LINE_LOOP); {
+			// original provided cube cube
+			for (int i = 1; i <= 8; i++) {
+				glColor3fv(cubeColors[i]); 
+				glVertex3fv(cubeVertexes[i]);
 
-		glColor3f(1.0, 0.0, 0.0); //red
-		glVertex3f(0.5, -0.5, -0.5); //v2
+			}
 
-		glColor3f(1.0, 1.0, 0.0); //r-g
-		glVertex3f(0.5, 0.5, -0.5); //v3
+		} glEnd();
 
-		glColor3f(0.0, 1.0, 0.0); //green
-		glVertex3f(-0.5, 0.5, -0.5); //v4
+		glBegin(GL_LINES); {
+			// 1 -> 4
+			glColor3fv(cubeColors[1]); 
+			glVertex3fv(cubeVertexes[1]);
+			glColor3fv(cubeColors[4]); 
+			glVertex3fv(cubeVertexes[4]);
+			// 5 -> 8
+			glColor3fv(cubeColors[5]); 
+			glVertex3fv(cubeVertexes[5]);
+			glColor3fv(cubeColors[8]); 
+			glVertex3fv(cubeVertexes[8]);
+			// 2 -> 7
+			glColor3fv(cubeColors[2]); 
+			glVertex3fv(cubeVertexes[2]);
+			glColor3fv(cubeColors[7]); 
+			glVertex3fv(cubeVertexes[7]);
+			// 3 -> 6
+			glColor3fv(cubeColors[3]); 
+			glVertex3fv(cubeVertexes[3]);
+			glColor3fv(cubeColors[6]); 
+			glVertex3fv(cubeVertexes[6]);
+		} glEnd();
+	}
+	else {
+		glBegin(GL_QUADS); {
+			// Front Face
+			for (int i = 1; i <= 4; i++) {
+				glColor3fv(cubeColors[i]);
+				glVertex3fv(cubeVertexes[i]);
+			}
+			// Back Face
+			for (int i = 5; i <= 8; i++) {
+				glColor3fv(cubeColors[i]);
+				glVertex3fv(cubeVertexes[i]);
+			}
 
-		glColor3f(0.0, 1.0, 1.0); //g-b
-		glVertex3f(-0.5, 0.5, 0.5); //v5
+			// left face
+			for (int i = 1; i <= 5; i+=4) {
+				glColor3fv(cubeColors[i]);
+				glVertex3fv(cubeVertexes[i]);
+				glColor3fv(cubeColors[i+3]);
+				glVertex3fv(cubeVertexes[i+3]);
+			}
+			// right face
+			for (int i = 2; i <= 6; i+=4) {
+				glColor3fv(cubeColors[i]);
+				glVertex3fv(cubeVertexes[i]);
+				glColor3fv(cubeColors[i+1]);
+				glVertex3fv(cubeVertexes[i+1]);
+			}
+			//bottom face
+			for (int i = 1; i <=7; i+=6) {
+				glColor3fv(cubeColors[i]);
+				glVertex3fv(cubeVertexes[i]);
+				glColor3fv(cubeColors[i+1]);
+				glVertex3fv(cubeVertexes[i+1]);
+			}
+			//top face
+			for (int i = 3; i <= 6; i++) {
+				glColor3fv(cubeColors[i]);
+				glVertex3fv(cubeVertexes[i]);
+			}
 
-		glColor3f(0.95, 0.95, 0.95); 
-		glVertex3f(0.5, 0.5, 0.5); //v6
-
-		glColor3f(1.0, 0.0, 1.0);
-		glVertex3f(0.5, -0.5, 0.5); //v7
-
-		glColor3f(0.0, 0.0, 1.0);
-		glVertex3f(-0.5, -0.5, 0.5); //v8
-	} glEnd();
-
-	glBegin(GL_LINES); {
-		glColor3f(0.0, 0.0, 0.0); //white
-		glVertex3f(-0.5, -0.5, -0.5); //v1
-		glColor3f(0.0, 1.0, 0.0); //green
-		glVertex3f(-0.5, 0.5, -0.5);  //v4
-	} glEnd();
-
+		} glEnd();
+	}	
 }
 
 bool axesOn = true;
@@ -283,6 +351,10 @@ void keyboard(unsigned char key, int x, int y )
 		glPopMatrix();
 		scaleM[0] = scaleM[1] = scaleM[2] = 1.0;
 		translateM[0] = translateM[1] = translateM[2] = 0.0;
+		glutPostRedisplay();
+		break;
+	case 'm': case 'M' :
+		wireFrame = !wireFrame;
 		glutPostRedisplay();
 		break;
 	}
