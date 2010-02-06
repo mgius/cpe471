@@ -50,6 +50,7 @@ GLfloat objectM[4][4] = {
 GLfloat *trackballM = (GLfloat *)objectM;
 
 GLfloat translateM[3] = {0.0, 0.0, 0.0};
+GLfloat scaleM[3] = {1.0, 1.0, 1.0};
 
 Vector3D startClick;
 Vector3D endClick;
@@ -134,9 +135,10 @@ void display() {
 	if (axesOn)
 		drawAxes();
 
-	// Translate
+
 	glPushMatrix(); {
 		glTranslatef(translateM[0], translateM[1], translateM[2]);
+		glScalef(scaleM[0], scaleM[1], scaleM[2]);
 		glRotatef(-45,  0, 1, 0);
 		glRotatef(45, 1, 0, 0);
 		drawcube();
@@ -193,12 +195,10 @@ void mouse(int button, int state, int x, int y) {
 	}
 	// Zoom (scale)
 	if (button == GLUT_MIDDLE_BUTTON) {
-		if (state == GLUT_DOWN) { /* if the left button is clicked */
+		if (state == GLUT_DOWN) { /* if the middle button is clicked */
 			printf("middle mouse clicked at %d %d\n", x, y);
+			mode = MODE_SCALE;
 			lastMouseX = x;
-			lastMouseY = y;
-			startClick = Vector3D(p2w_x(x), p2w_y(y),0);
-			endClick = Vector3D(p2w_x(x), p2w_y(y),0);
 		} 
 		if (state == GLUT_UP) {
 
@@ -214,6 +214,18 @@ void mouseMove(int x, int y) {
 		translateM[1] -= p2w_y(lastMouseY) - p2w_y(y);
 		lastMouseX = x;
 		lastMouseY = y;
+		glutPostRedisplay();
+	}
+	if (mode == MODE_SCALE) {
+		if (lastMouseX > x) {
+			// moving left, shrink
+			scaleM[0] = scaleM[1] -= .01;
+		}
+		else {
+			//moving right, grow
+			scaleM[0] = scaleM[1] += .01;
+		}
+		lastMouseX = x;
 		glutPostRedisplay();
 	}
 }
