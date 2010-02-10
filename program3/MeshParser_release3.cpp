@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -100,7 +101,7 @@ void readLine(char* str) {
   //read a vertex or face
   if (str[0]=='V' && !strncmp(str,"Vertex ",7)) {
     Vector3* v;
-    if (sscanf_s(str,"Vertex %d %g %g %g",&vi,&x,&y,&z) !=4)
+    if (sscanf(str,"Vertex %d %g %g %g",&vi,&x,&y,&z) !=4)
     {
       printf("an error occurred in reading vertices\n");
 #ifdef _DEBUG
@@ -152,7 +153,7 @@ void readLine(char* str) {
       //if we're reading off a color
       if (!strncmp(s1,"rgb=",4)) {
         //grab the values of the string
-        if (sscanf_s(s1,"rgb=(%g %g %g) matid=%d",&r,&g,&b,&mat)!=4)
+        if (sscanf(s1,"rgb=(%g %g %g) matid=%d",&r,&g,&b,&mat)!=4)
         {
            printf("error during reading rgb values\n");
 #ifdef _DEBUG
