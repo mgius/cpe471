@@ -82,6 +82,65 @@ int view_mode;
 
 bool show_normals = true;
 
+// a bunch of lighting stuff I jacked from simple_light
+int light = 0;
+//globals for lighting - use a white light and apply materials
+//light position
+GLfloat light_pos[4] = {1.0, 1.0, 1.5, 1.0};
+//light color (ambiant, diffuse and specular)
+GLfloat light_amb[4] = {0.6, 0.6, 0.6, 1.0};
+GLfloat light_diff[4] = {0.6, 0.6, 0.6, 1.0};
+GLfloat light_spec[4] = {0.8, 0.8, 0.8, 1.0};
+int mat = 0;
+//set up some materials
+typedef struct materialStruct {
+  GLfloat ambient[4];
+  GLfloat diffuse[4];
+  GLfloat specular[4];
+  GLfloat shininess[1];
+} materialStruct;
+
+materialStruct RedFlat = {
+  {0.3, 0.0, 0.0, 1.0},
+  {0.9, 0.0, 0.0, 1.0},
+  {0.0, 0.0, 0.0, 1.0},
+  {0.0}
+};
+materialStruct GreenShiny = {
+  {0.0, 0.3, 0.0, 1.0},
+  {0.0, 0.9, 0.0, 1.0},
+  {0.2, 1.0, 0.2, 1.0},
+  {8.0}
+};
+
+//sets up a specific material
+void materials(materialStruct materials) {
+  glMaterialfv(GL_FRONT, GL_AMBIENT, materials.ambient);
+  glMaterialfv(GL_FRONT, GL_DIFFUSE, materials.diffuse);
+  glMaterialfv(GL_FRONT, GL_SPECULAR, materials.specular);
+  glMaterialfv(GL_FRONT, GL_SHININESS, materials.shininess);
+}
+//initialization calls for opengl for static light
+//note that we still need to enable lighting in order for it to work
+//see keyboard 'l' event
+void init_lighting() {
+  //turn on light0
+  glEnable(GL_LIGHT0);
+  //set up the diffuse, ambient and specular components for the light
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diff);
+  glLightfv(GL_LIGHT0, GL_AMBIENT, light_amb);
+  glLightfv(GL_LIGHT0, GL_SPECULAR, light_spec);
+  //specify our lighting model as 1 normal per face
+  glShadeModel(GL_FLAT);
+}
+
+void pos_light() {
+  //set the light's position
+  glMatrixMode(GL_MODELVIEW);
+  glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+}
+
+
 //forward declarations of functions
 void readLine(char* str);
 void readStream(istream& is);
@@ -214,6 +273,7 @@ void drawTria(Tri* t) {
 		glColor3f(0.0, 0.0, 0.5);
 		//note that the vertices are indexed starting at 0, but the triangles
 		//index them starting from 1, so we must offset by -1!!!
+		glNormal3f(t->normal.x, t->normal.y, t->normal.z);
 		glVertex3f(Vertices[t->v1 - 1]->x, 
 				Vertices[t->v1 - 1]->y,
 				Vertices[t->v1 - 1]->z);
@@ -298,7 +358,7 @@ void computeNormals() {
 				                      top->z - right->z);
 
 		current->normal = leftEdge.crossProd(rightEdge);
-		current->normal.normalize(.02);
+		current->normal.normalize();
 		//printf("normalized: %f, %f, %f, %f\n", current->normal.x, current->normal.y, current->normal.z, current->normal.length());
 	}
 }
@@ -315,9 +375,9 @@ void drawNormals() {
 			xBegin = 1.0 / 3.0 * (top->x + left->x + right->x);
 			yBegin = 1.0 / 3.0 * (top->y + left->y + right->y);
 			zBegin = 1.0 / 3.0 * (top->z + left->z + right->z);
-			xEnd = xBegin + (current->normal).x;
-			yEnd = yBegin + (current->normal).y;
-			zEnd = zBegin + (current->normal).z;
+			xEnd = xBegin + (current->normal).x * 0.02;
+			yEnd = yBegin + (current->normal).y * 0.02;
+			zEnd = zBegin + (current->normal).z * 0.02;
 			//printf("Drawing normal at %f, %f, %f\n", xBegin, yBegin, zBegin);
 			//printf("to %f, %f, %f\n", xEnd, yEnd, zEnd);
 			glVertex3f(xBegin, yBegin, zBegin);
@@ -336,6 +396,8 @@ void display() {
   glPushMatrix();
   //set up the camera
   gluLookAt(0, 0, 3.0, 0, 0, 0, 0, 1, 0);
+
+  pos_light();
     
   drawObjects();
 
@@ -349,16 +411,31 @@ void keyboard(unsigned char key, int x, int y) {
 	switch( key) {
 	case 'n': case 'N':
 		show_normals = !show_normals;
-		glutPostRedisplay();
 		break;
 	case 'e': case 'E':
 		display_mode = display_mode == GL_LINE_LOOP ? GL_TRIANGLES : GL_LINE_LOOP;
-		glutPostRedisplay();
 		break;
+   case 'l':
+    light = !light;
+    if (light)
+      glEnable(GL_LIGHTING);
+    else
+      glDisable(GL_LIGHTING);
+    break;
+    //simple way to toggle the materials
+  case 'm':
+    mat++;
+    if (mat%2 == 0)
+      materials(RedFlat);
+    else if (mat%2 == 1)
+      materials(GreenShiny);
+    break;
+
 	case 'q': case 'Q':
 		exit(0);
 		break;
 	}
+	glutPostRedisplay();
 }
 
 
@@ -416,6 +493,7 @@ int main( int argc, char** argv ) {
   }
 
   computeNormals();
+  init_lighting();
   glutMainLoop();
 }
 
