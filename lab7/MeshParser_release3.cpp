@@ -33,12 +33,12 @@ typedef struct Vector3
   float length() {
 	  return sqrtf(x * x + y * y + z * z);
   }
-  void normalize(float divisor = 1.0) {
+  void normalize(float scale = 1.0) {
 	  float len = this->length();
-	  printf("Normalizing vector - x: %f, y: %f, z: %f, length: %f\n", x,y,z,len);
-	  x /= len / divisor;
-	  y /= len / divisor;
-	  z /= len / divisor;
+	  //printf("Normalizing vector - x: %f, y: %f, z: %f, length: %f\n", x,y,z,len);
+	  x /= (len / scale);
+	  y /= (len / scale);
+	  z /= (len / scale);
   }
   Vector3 &operator*=(int mult) {
 	  x *= mult;
@@ -77,8 +77,10 @@ float max_extent;
 //other globals
 int GW;
 int GH;
-int display_mode;
+int display_mode = GL_LINE_LOOP;
 int view_mode;
+
+bool show_normals = true;
 
 //forward declarations of functions
 void readLine(char* str);
@@ -86,6 +88,7 @@ void readStream(istream& is);
 void drawTri(Tri * t);
 void drawObjects();
 void computeNormals();
+void drawNormals();
 void display();
 
 //open the file for reading
@@ -207,22 +210,20 @@ void printFirstThree() {
 
 //drawing routine to draw triangles as wireframe
 void drawTria(Tri* t) {
-  if(display_mode == 0) {
-    glBegin(GL_LINE_LOOP);
-    glColor3f(0.0, 0.0, 0.5);
-    //note that the vertices are indexed starting at 0, but the triangles
-    //index them starting from 1, so we must offset by -1!!!
-    glVertex3f(Vertices[t->v1 - 1]->x, 
-      Vertices[t->v1 - 1]->y,
-      Vertices[t->v1 - 1]->z);
-    glVertex3f(Vertices[t->v2 - 1]->x, 
-      Vertices[t->v2 - 1]->y,
-      Vertices[t->v2 - 1]->z);
-    glVertex3f(Vertices[t->v3 - 1]->x, 
-      Vertices[t->v3 - 1]->y,
-      Vertices[t->v3 - 1]->z);
-    glEnd();
-  }
+	glBegin(display_mode); {
+		glColor3f(0.0, 0.0, 0.5);
+		//note that the vertices are indexed starting at 0, but the triangles
+		//index them starting from 1, so we must offset by -1!!!
+		glVertex3f(Vertices[t->v1 - 1]->x, 
+				Vertices[t->v1 - 1]->y,
+				Vertices[t->v1 - 1]->z);
+		glVertex3f(Vertices[t->v2 - 1]->x, 
+				Vertices[t->v2 - 1]->y,
+				Vertices[t->v2 - 1]->z);
+		glVertex3f(Vertices[t->v3 - 1]->x, 
+				Vertices[t->v3 - 1]->y,
+				Vertices[t->v3 - 1]->z);
+	} glEnd();
 }
 
 void drawSphere() {
@@ -270,6 +271,8 @@ void drawObjects() {
   for(unsigned int j = 0; j < Triangles.size(); j++) {
     drawTria(Triangles[j]);
   }
+  if (show_normals)
+	  drawNormals();
   glPopMatrix();
   
   //transforms for the sphere
@@ -295,13 +298,13 @@ void computeNormals() {
 				                      top->z - right->z);
 
 		current->normal = leftEdge.crossProd(rightEdge);
-		current->normal.normalize(.1);
-		printf("normalized: %f, %f, %f, %f\n", current->normal.x, current->normal.y, current->normal.z, current->normal.length());
+		current->normal.normalize(.02);
+		//printf("normalized: %f, %f, %f, %f\n", current->normal.x, current->normal.y, current->normal.z, current->normal.length());
 	}
 }
 void drawNormals() {
 	glBegin(GL_LINES); {
-		glColor3f(1.0, 0,0);
+		glColor3f(1.0, 0, 0);
 		for (int i = 0; i < Triangles.size(); i++) {
 			Tri *current = Triangles[i];
 			Vector3 *top = Vertices[current->v1 - 1];
@@ -336,12 +339,26 @@ void display() {
     
   drawObjects();
 
-  drawNormals();
-
   glPopMatrix();
     
   glutSwapBuffers();
     
+}
+
+void keyboard(unsigned char key, int x, int y) {
+	switch( key) {
+	case 'n': case 'N':
+		show_normals = !show_normals;
+		glutPostRedisplay();
+		break;
+	case 'e': case 'E':
+		display_mode = display_mode == GL_LINE_LOOP ? GL_TRIANGLES : GL_LINE_LOOP;
+		glutPostRedisplay();
+		break;
+	case 'q': case 'Q':
+		exit(0);
+		break;
+	}
 }
 
 
@@ -359,6 +376,7 @@ int main( int argc, char** argv ) {
   //register glut callback functions
   glutDisplayFunc( display );
   glutReshapeFunc( reshape );
+  glutKeyboardFunc( keyboard );
   //enable z-buffer
   glEnable(GL_DEPTH_TEST);
   
@@ -368,7 +386,7 @@ int main( int argc, char** argv ) {
   center.x = 0;
   center.y = 0;
   center.z = 0;
-  display_mode = 0;
+//  display_mode = 0;
   max_extent = 1.0;
   view_mode = 0;
   
