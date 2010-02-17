@@ -85,8 +85,19 @@ int display_mode = GL_LINE_LOOP;
 #define ORTHO 1
 #define PERS  2
 int view_mode = ORTHO;
-
 bool show_normals = false;
+
+#define WorldW 2.0 *(float)GW / (float)GH
+#define WorldH 2.0
+inline float p2w_x(float w) {
+   //float WorldW = 2 * (float) GW / (float) GH;
+   return WorldW / GW * w - WorldW / 2;
+}
+
+inline float p2w_y(float h) {
+   return -1 * (WorldH / GH * h - WorldH / 2);
+}
+
 
 // a bunch of lighting stuff I jacked from simple_light
 int light = 0;
@@ -394,16 +405,7 @@ void drawNormals() {
 	} glEnd();
 }
 GLdouble eyeX = 0, eyeY = 0, eyeZ = 3.0;
-float theta = 0;
-void timer(int) {
-	theta += 1.0;
-	if (theta >= 360.0)
-		theta -=360.0;
-	eyeX = cos(deg2rad(theta));
-	eyeY = sin(deg2rad(theta));
-	glutTimerFunc(100, timer, 0);
-	glutPostRedisplay();
-}
+GLdouble lookX, lookY, lookZ;
 void display() {
   
   float numV = Vertices.size();
@@ -414,7 +416,8 @@ void display() {
     
   glPushMatrix();
   //set up the camera
-  gluLookAt(eyeX, eyeY, eyeZ, 0, 0, 0, 0, 1, 0);
+  gluLookAt(eyeX, eyeY, eyeZ, center.x, center.y, center.z, 0, 1, 0);
+  printf("now looking from %f, %f, %f at %f, %f, %f\n", eyeX, eyeY, eyeZ, lookX, lookY, lookZ);
 
   pos_light();
     
@@ -424,6 +427,47 @@ void display() {
     
   glutSwapBuffers();
     
+}
+
+#define MODE_TRANSLATE 1
+
+int mouse_mode = MODE_TRANSLATE;
+int lastMouseX, lastMouseY;
+void mouse(int button, int state, int x, int y) {
+	// Move camera in X,Y
+	if (button == GLUT_LEFT_BUTTON) {
+		if (state == GLUT_DOWN) {
+			mouse_mode = MODE_TRANSLATE;
+
+			lastMouseX = x;
+			lastMouseY = y;
+		}
+	}
+}
+
+#define MOVE_AMT .05
+void mouseMove(int x, int y) {
+	if (mouse_mode == MODE_TRANSLATE) {
+		if (lastMouseX > x) {
+			eyeX -= MOVE_AMT;
+			lookX -= MOVE_AMT;
+		}
+		else {
+			eyeX += MOVE_AMT;
+			lookX += MOVE_AMT;
+		}
+		if (lastMouseY > y) {
+			eyeY -= MOVE_AMT;
+			lookY -= MOVE_AMT;
+		}
+		else {
+			eyeY += MOVE_AMT;
+			lookY += MOVE_AMT;
+		}
+		lastMouseX = x;
+		lastMouseY = y;
+		glutPostRedisplay();
+	}
 }
 
 void keyboard(unsigned char key, int x, int y) {
@@ -478,6 +522,8 @@ int main( int argc, char** argv ) {
   glutDisplayFunc( display );
   glutReshapeFunc( reshape );
   glutKeyboardFunc( keyboard );
+  glutMouseFunc( mouse );
+  glutMotionFunc( mouseMove );
   //enable z-buffer
   glEnable(GL_DEPTH_TEST);
   
@@ -505,9 +551,9 @@ int main( int argc, char** argv ) {
     //cout << "max_extent " << max_extent << " max_x " << max_x << " min_x " << min_x << endl;
     //cout << "max_y " << max_y << " min_y " << min_y << " max_z " << max_z << " min_z " << min_z << endl;
     
-    center.x = center.x/Vertices.size();
-    center.y = center.y/Vertices.size();
-    center.z = center.z/Vertices.size();
+    lookX = center.x = center.x/Vertices.size();
+    lookY = center.y = center.y/Vertices.size();
+    lookZ = center.z = center.z/Vertices.size();
     //cout << "center " << center.x << " " << center.y << " " << center.z << endl;
     //cout << "scale by " << 1.0/(float)max_extent << endl;
   } else {
@@ -517,7 +563,6 @@ int main( int argc, char** argv ) {
 
   computeNormals();
   init_lighting();
-  glutTimerFunc(100, timer, 0);
   glutMainLoop();
 }
 
