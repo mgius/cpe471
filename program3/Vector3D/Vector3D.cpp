@@ -73,6 +73,12 @@ void Vector3D::normalize(float scale) {
 	z /= (len / scale);
 }
 
+void Vector3D::scaleToOne() {
+	if (length() > 1.0) {
+		normalize();
+	}
+}
+
 // Returns the length of the vector (which happens to be the sqrt of dotProd)
 float Vector3D::length() const {
 	return sqrtf(x *x + y*y + z*z);

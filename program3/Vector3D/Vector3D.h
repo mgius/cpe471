@@ -31,6 +31,7 @@ public:
 
 	void bindZ();
 	void normalize(float scale = 1.0);
+	void scaleToOne();
 
 	bool operator==(const Vector3D &right) const;
 

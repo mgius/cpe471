@@ -18,6 +18,48 @@ using namespace std;
 #define FLT_MIN 1.1754E-38F
 #define FLT_MAX 1.1754E+38F
 
+// These all ripped from program2 for trackball functionality
+
+int GW, GH;
+
+#define WorldW 4.0 *(float)GW / (float)GH
+#define WorldH 4.0
+inline float p2w_x(float w) {
+   //float WorldW = 2 * (float) GW / (float) GH;
+   return WorldW / GW * w - WorldW / 2;
+}
+
+inline float p2w_y(float h) {
+   return -1 * (WorldH / GH * h - WorldH / 2);
+}
+
+inline float deg2rad(int deg) {
+   return M_PI * deg / 180.0;
+}
+
+inline float rad2deg(float rad) {
+   return rad * 180.0 / M_PI;
+}
+
+float findAngle(Vector3D &a, Vector3D &b) {
+   return acos(a.dotProd(b) / (fabs(a.length()) * fabs(b.length())));
+}
+
+/*an example of a simple data structure to store a 4x4 matrix */
+GLfloat objectM[4][4] = {
+   {1.0, 0.0, 0.0, 0.0},
+   {0.0, 1.0, 0.0, 0.0},
+   {0.0, 0.0, 1.0, 0.0},
+   {0.0, 0.0, 0.0, 1.0}
+};
+
+GLfloat *trackballM = (GLfloat *)objectM;
+
+GLfloat translateM[3] = {0.0, 0.0, 0.0};
+GLfloat scaleM[3] = {1.0, 1.0, 1.0};
+
+Vector3D startClick, endClick;
+
 //data structure to store triangle - 
 //note that v1, v2, and v3 are indexes into the vertex array
 typedef struct Tri{
@@ -40,14 +82,18 @@ Vector3D center;
 float max_x, max_y, max_z, min_x, min_y, min_z;
 float max_extent;
 
-//other globals
-int GW;
-int GH;
-GLenum display_mode = GL_LINE_LOOP;
-
+// other globals
 #define VIEW_ORTHO 1
 #define VIEW_PERSP 2
 int view_mode = VIEW_ORTHO;
+bool show_normals = false;
+GLenum display_mode = GL_LINE_LOOP;
+
+#define MODE_NONE      0
+#define MODE_TRANSLATE 1
+#define MODE_ROTATE    2
+#define MODE_SCALE     4
+int mouse_mode = MODE_NONE;
 
 //forward declarations of functions
 void readLine(char* str);
@@ -57,6 +103,8 @@ void drawObjects();
 void ReadFile(char* filename);
 void printFirstThree();
 void display();
+void computeNormals();
+void displayNormals();
 
 
 //drawing routine to draw triangles as wireframe
@@ -111,45 +159,176 @@ void reshape(int w, int h) {
 
 void drawObjects() {
   
-  //transforms for the mesh
-  glPushMatrix();
-  //leave these transformations in as they center and scale each mesh correctly
-  //scale object to window
-  glScalef(1.0/(float)max_extent, 1.0/(float)max_extent, 1.0/(float)max_extent);
-  //translate the object to the orgin
-  glTranslatef(-(center.x), -(center.y), -(center.z));
-  //draw the wireframe mesh
-  for(unsigned int j = 0; j < Triangles.size(); j++) {
-    drawTria(Triangles[j]);
-  }
-  glPopMatrix();
-  
-  //transforms for the sphere
-  glPushMatrix();
-  //draw the glut sphere behind the mesh
-  glTranslatef(1.25, 0.0, -2.0);
-  drawSphere();
-  glPopMatrix();
+	//transforms for the mesh
+	glPushMatrix(); {
+      // My transforms for trackball func
+		glTranslatef(translateM[0], translateM[1], translateM[2]);
+      glScalef(scaleM[0], scaleM[1], scaleM[2]);
+      glMultMatrixf(trackballM);
+
+		//leave these transformations in as they center and scale each mesh correctly
+		//scale object to window
+		glScalef(1.0/(float)max_extent, 1.0/(float)max_extent, 1.0/(float)max_extent);
+		//translate the object to the orgin
+		glTranslatef(-(center.x), -(center.y), -(center.z));
+		//draw the wireframe mesh
+		for(unsigned int j = 0; j < Triangles.size(); j++) {
+			drawTria(Triangles[j]);
+		}
+	} glPopMatrix();
+
+	//transforms for the sphere
+	glPushMatrix(); {
+		//draw the glut sphere behind the mesh
+		glTranslatef(1.25, 0.0, -2.0);
+		drawSphere();
+	} glPopMatrix();
 }
 
 void display() {
-  
-  float numV = Vertices.size();
-  
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  
-  glMatrixMode(GL_MODELVIEW);
-    
-  glPushMatrix();
-  //set up the camera
-  gluLookAt(0, 0, 3.0, 0, 0, 0, 0, 1, 0);
-    
-  drawObjects();
 
-  glPopMatrix();
-    
-  glutSwapBuffers();
-    
+	float numV = Vertices.size();
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glMatrixMode(GL_MODELVIEW);
+
+	glPushMatrix();
+	//set up the camera
+	gluLookAt(0, 0, 3.0, 0, 0, 0, 0, 1, 0);
+
+	drawObjects();
+
+	glPopMatrix();
+
+	glutSwapBuffers();
+
+}
+
+int lastMouseX, lastMouseY;
+
+void mouse(int button, int state, int x, int y) {
+	// Rotate
+	if (button == GLUT_LEFT_BUTTON) {
+		if (state == GLUT_DOWN) { /* if the left button is clicked */
+			printf("left mouse clicked at %d %d\n", x, y);
+			mouse_mode = MODE_ROTATE;
+			startClick = Vector3D(p2w_x(x), p2w_y(y),0);
+			startClick.scaleToOne();
+			startClick.bindZ();
+			endClick = Vector3D(p2w_x(x), p2w_y(y),0);
+			endClick.scaleToOne();
+			endClick.bindZ();
+		}
+		if (state == GLUT_UP) {
+		}
+	}
+	// Move (translate)
+	if (button == GLUT_RIGHT_BUTTON) {
+		if (state == GLUT_DOWN) { /* if the left button is clicked */
+			printf("right mouse clicked at %d %d\n", x, y);
+			mouse_mode = MODE_TRANSLATE;
+
+			lastMouseX = x;
+			lastMouseY = y;
+		}
+		if (state == GLUT_UP) {
+
+		}
+
+	}
+	// Zoom (scale)
+	if (button == GLUT_MIDDLE_BUTTON) {
+		if (state == GLUT_DOWN) { /* if the middle button is clicked */
+			printf("middle mouse clicked at %d %d\n", x, y);
+			mouse_mode = MODE_SCALE;
+			lastMouseX = x;
+		}
+		if (state == GLUT_UP) {
+
+		}
+	}
+}
+
+void mouseMove(int x, int y) {
+	//printf("mouse moved at %d %d\n", x, y);
+	if (mouse_mode == MODE_TRANSLATE) {
+		translateM[0] -= p2w_x(lastMouseX) - p2w_x(x);
+		translateM[1] -= p2w_y(lastMouseY) - p2w_y(y);
+		lastMouseX = x;
+		lastMouseY = y;
+		glutPostRedisplay();
+	}
+	else if (mouse_mode == MODE_SCALE) {
+		if (lastMouseX > x) {
+			// moving left, shrink
+			scaleM[0] = scaleM[1] -= .01;
+			if (scaleM[0] <= 0.1) {
+				scaleM[0] = scaleM[1] = .1;
+			}
+		}
+		else {
+			//moving right, grow
+			scaleM[0] = scaleM[1] += .01;
+			if (scaleM[0] >= 3.0) {
+				scaleM[0] = scaleM[1] = 3.0;
+			}
+		}
+		lastMouseX = x;
+		glutPostRedisplay();
+	}
+	else if (mouse_mode == MODE_ROTATE) {
+		endClick = Vector3D(p2w_x(x), p2w_y(y), 0);
+		endClick.scaleToOne();
+		endClick.bindZ();
+		Vector3D axisRot = startClick.crossProd(endClick);
+		float angleInDeg = rad2deg(findAngle(startClick, endClick));
+		cout << "start: " << startClick <<  " length: " << startClick.length() <<
+			cout << "end: " << endClick <<  " length: " << endClick.length() << endl;
+		cout << "axis: " << axisRot << endl;
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix(); {
+			glLoadIdentity();
+			glRotatef(angleInDeg, axisRot.getX(), axisRot.getY(), axisRot.getZ());
+			glMultMatrixf(trackballM);
+			glGetFloatv(GL_MODELVIEW_MATRIX, trackballM);
+		} glPopMatrix();
+		startClick = endClick;
+		glutPostRedisplay();
+	}
+}
+
+
+
+void keyboard(unsigned char key, int x, int y) {
+	switch( key) {
+	case 'n': case 'N':
+		show_normals = !show_normals;
+		break;
+	case 'e': case 'E':
+		display_mode = display_mode == GL_LINE_LOOP ? GL_TRIANGLES : GL_LINE_LOOP;
+		break;
+	//case 'l':
+	//	light = !light;
+	//	if (light)
+	//		glEnable(GL_LIGHTING);
+	//	else
+	//		glDisable(GL_LIGHTING);
+	//	break;
+	//	//simple way to toggle the materials
+	//case 'm':
+	//	mat++;
+	//	if (mat%2 == 0)
+	//		materials(RedFlat);
+	//	else if (mat%2 == 1)
+	//		materials(GreenShiny);
+	//	break;
+
+	case 'q': case 'Q':
+		exit(0);
+		break;
+	}
+	glutPostRedisplay();
 }
 
 
@@ -167,6 +346,9 @@ int main( int argc, char** argv ) {
   //register glut callback functions
   glutDisplayFunc( display );
   glutReshapeFunc( reshape );
+  glutKeyboardFunc( keyboard );
+  glutMouseFunc( mouse );
+  glutMotionFunc( mouseMove );
   //enable z-buffer
   glEnable(GL_DEPTH_TEST);
   
@@ -203,7 +385,9 @@ int main( int argc, char** argv ) {
 	 exit(1);
   }
 
-  
+  computeNormals();
+
+  glEnable(GL_NORMALIZE);
   glutMainLoop();
 }
 
