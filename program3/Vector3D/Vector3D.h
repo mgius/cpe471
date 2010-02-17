@@ -30,7 +30,7 @@ public:
 	Vector3D &translate(float, float, float);
 
 	void bindZ();
-	void scaleToOne();
+	void normalize(float scale = 1.0);
 
 	bool operator==(const Vector3D &right) const;
 

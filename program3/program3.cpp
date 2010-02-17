@@ -61,21 +61,20 @@ void display();
 
 //drawing routine to draw triangles as wireframe
 void drawTria(Tri* t) {
-    glBegin(display_mode);
-    glColor3f(0.0, 0.0, 0.5);
-    //note that the vertices are indexed starting at 0, but the triangles
-    //index them starting from 1, so we must offset by -1!!!
-    glVertex3f(Vertices[t->v1 - 1]->x, 
-      Vertices[t->v1 - 1]->y,
-      Vertices[t->v1 - 1]->z);
-    glVertex3f(Vertices[t->v2 - 1]->x, 
-      Vertices[t->v2 - 1]->y,
-      Vertices[t->v2 - 1]->z);
-    glVertex3f(Vertices[t->v3 - 1]->x, 
-      Vertices[t->v3 - 1]->y,
-      Vertices[t->v3 - 1]->z);
-    glEnd();
-  }
+	glBegin(display_mode); {
+		glColor3f(0.0, 0.0, 0.5);
+		//note that the vertices are indexed starting at 0, but the triangles
+		//index them starting from 1, so we must offset by -1!!!
+		glVertex3f(Vertices[t->v1 - 1]->x, 
+				Vertices[t->v1 - 1]->y,
+				Vertices[t->v1 - 1]->z);
+		glVertex3f(Vertices[t->v2 - 1]->x, 
+				Vertices[t->v2 - 1]->y,
+				Vertices[t->v2 - 1]->z);
+		glVertex3f(Vertices[t->v3 - 1]->x, 
+				Vertices[t->v3 - 1]->y,
+				Vertices[t->v3 - 1]->z);
+	} glEnd();
 }
 
 void drawSphere() {
@@ -208,6 +207,68 @@ int main( int argc, char** argv ) {
   glutMainLoop();
 }
 
+
+
+// Ripped from lab7
+
+void computeNormals() {
+   for (int i = 0; i < Triangles.size(); i++) {
+      Tri *current = Triangles[i];
+      Vector3D *top = Vertices[current->v1 - 1];
+      Vector3D *left = Vertices[current->v2 - 1];
+      Vector3D *right = Vertices[current->v3 - 1];
+
+      Vector3D leftEdge = Vector3D(top->x - left->x,
+                                  top->y - left->y,
+                                  top->z - left->z);
+      Vector3D rightEdge = Vector3D(top->x - right->x,
+                                  top->y - right->y,
+                                  top->z - right->z);
+
+      current->normal = leftEdge.crossProd(rightEdge);
+      current->normal.normalize();
+      //printf("normalized: %f, %f, %f, %f\n", current->normal.x, current->norma
+   }
+}
+void drawNormals() {
+   glBegin(GL_LINES); {
+      glColor3f(1.0, 0, 0);
+      for (int i = 0; i < Triangles.size(); i++) {
+         Tri *current = Triangles[i];
+         Vector3D *top = Vertices[current->v1 - 1];
+         Vector3D *left = Vertices[current->v2 - 1];
+         Vector3D *right = Vertices[current->v3 - 1];
+
+         float xBegin, xEnd, yBegin, yEnd, zBegin, zEnd;
+         xBegin = 1.0 / 3.0 * (top->x + left->x + right->x);
+         yBegin = 1.0 / 3.0 * (top->y + left->y + right->y);
+         zBegin = 1.0 / 3.0 * (top->z + left->z + right->z);
+         xEnd = xBegin + (current->normal).x * 0.02;
+         yEnd = yBegin + (current->normal).y * 0.02;
+         zEnd = zBegin + (current->normal).z * 0.02;
+         //printf("Drawing normal at %f, %f, %f\n", xBegin, yBegin, zBegin);
+         //printf("to %f, %f, %f\n", xEnd, yEnd, zEnd);
+         glVertex3f(xBegin, yBegin, zBegin);
+         glVertex3f(xEnd, yEnd, zEnd);
+      }
+   } glEnd();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Provided functions
+
 //open the file for reading
 void ReadFile(char* filename) {
   
@@ -234,11 +295,6 @@ void readStream(istream& is)
     readLine(str);
   }
 }
-
-
-
-
-
 
 //process each line of input save vertices and faces appropriately
 void readLine(char* str) {

@@ -65,17 +65,17 @@ void Vector3D::bindZ() {
 	z = underTheSqrt < 0 ? 0 : sqrtf(underTheSqrt);
 }
 
-void Vector3D::scaleToOne() {
-	if (length() > 1.0) {
-		x /= length();
-		y /= length();
-		z /= length();
-	}
+void Vector3D::normalize(float scale) {
+	float len = this->length();
+	//printf("Normalizing vector - x: %f, y: %f, z: %f, length: %f\n", x,y,z,le
+	x /= (len / scale);
+	y /= (len / scale);
+	z /= (len / scale);
 }
 
 // Returns the length of the vector (which happens to be the sqrt of dotProd)
 float Vector3D::length() const {
-	return sqrtf(dotProd(*this));
+	return sqrtf(x *x + y*y + z*z);
 }
 
 // Two vectors are the same if their direction, length, and anchor are the same
