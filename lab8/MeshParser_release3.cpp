@@ -17,6 +17,10 @@ using namespace std;
 #define FLT_MIN 1.1754E-38F
 #define FLT_MAX 1.1754E+38F
 
+inline float deg2rad(int deg) {
+	   return M_PI * deg / 180.0;
+}
+
 //very simple data structure to store 3d points
 typedef struct Vector3
 {
@@ -78,9 +82,11 @@ float max_extent;
 int GW;
 int GH;
 int display_mode = GL_LINE_LOOP;
-int view_mode;
+#define ORTHO 1
+#define PERS  2
+int view_mode = ORTHO;
 
-bool show_normals = true;
+bool show_normals = false;
 
 // a bunch of lighting stuff I jacked from simple_light
 int light = 0;
@@ -309,8 +315,10 @@ void reshape(int w, int h) {
   
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  if (view_mode == 0)
+  if (view_mode == ORTHO)
     glOrtho( -2.0*(float)w/h, 2.0*(float)w/h, -2.0, 2.0, 1.0, 15.0);
+  else if (view_mode == PERS)
+	  gluPerspective(90, w/h, 1.0, 15.0);
   //else... fill in
   glMatrixMode(GL_MODELVIEW);
   glViewport(0, 0, w, h);
@@ -385,6 +393,17 @@ void drawNormals() {
 		}
 	} glEnd();
 }
+GLdouble eyeX = 0, eyeY = 0, eyeZ = 3.0;
+float theta = 0;
+void timer(int) {
+	theta += 1.0;
+	if (theta >= 360.0)
+		theta -=360.0;
+	eyeX = cos(deg2rad(theta));
+	eyeY = sin(deg2rad(theta));
+	glutTimerFunc(100, timer, 0);
+	glutPostRedisplay();
+}
 void display() {
   
   float numV = Vertices.size();
@@ -395,7 +414,7 @@ void display() {
     
   glPushMatrix();
   //set up the camera
-  gluLookAt(0, 0, 3.0, 0, 0, 0, 0, 1, 0);
+  gluLookAt(eyeX, eyeY, eyeZ, 0, 0, 0, 0, 1, 0);
 
   pos_light();
     
@@ -430,6 +449,11 @@ void keyboard(unsigned char key, int x, int y) {
     else if (mat%2 == 1)
       materials(GreenShiny);
     break;
+  case 'v': case 'V':
+		view_mode = view_mode == ORTHO ? PERS : ORTHO;
+		reshape(GW,GH);
+		break;
+
 
 	case 'q': case 'Q':
 		exit(0);
@@ -465,7 +489,6 @@ int main( int argc, char** argv ) {
   center.z = 0;
 //  display_mode = 0;
   max_extent = 1.0;
-  view_mode = 0;
   
   //make sure a file to read is specified
   if (argc > 1) {
@@ -494,6 +517,7 @@ int main( int argc, char** argv ) {
 
   computeNormals();
   init_lighting();
+  glutTimerFunc(100, timer, 0);
   glutMainLoop();
 }
 

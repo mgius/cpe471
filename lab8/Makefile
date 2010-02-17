@@ -1,6 +1,6 @@
 GL=-lGL -lglut 
 
-all: lab6
+all: lab8
 
 lab8: MeshParser_release3.o
 	g++ $(GL) -lm -o lab8 MeshParser_release3.o
