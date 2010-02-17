@@ -87,13 +87,19 @@ float max_extent;
 #define VIEW_PERSP 2
 int view_mode = VIEW_ORTHO;
 bool show_normals = false;
+bool light = false;
 GLenum display_mode = GL_LINE_LOOP;
 
 #define MODE_NONE      0
 #define MODE_TRANSLATE 1
 #define MODE_ROTATE    2
 #define MODE_SCALE     4
-int mouse_mode = MODE_NONE;
+int mouseMove_mode = MODE_NONE;
+
+#define MODE_TRACKBALL 1
+#define MODE_LIGHT 2
+int mouse_mode = MODE_TRACKBALL;
+
 
 //forward declarations of functions
 void readLine(char* str);
@@ -212,7 +218,7 @@ void mouse(int button, int state, int x, int y) {
 	if (button == GLUT_LEFT_BUTTON) {
 		if (state == GLUT_DOWN) { /* if the left button is clicked */
 			printf("left mouse clicked at %d %d\n", x, y);
-			mouse_mode = MODE_ROTATE;
+			mouseMove_mode = MODE_ROTATE;
 			startClick = Vector3D(p2w_x(x), p2w_y(y),0);
 			startClick.scaleToOne();
 			startClick.bindZ();
@@ -227,7 +233,7 @@ void mouse(int button, int state, int x, int y) {
 	if (button == GLUT_RIGHT_BUTTON) {
 		if (state == GLUT_DOWN) { /* if the left button is clicked */
 			printf("right mouse clicked at %d %d\n", x, y);
-			mouse_mode = MODE_TRANSLATE;
+			mouseMove_mode = MODE_TRANSLATE;
 
 			lastMouseX = x;
 			lastMouseY = y;
@@ -241,7 +247,7 @@ void mouse(int button, int state, int x, int y) {
 	if (button == GLUT_MIDDLE_BUTTON) {
 		if (state == GLUT_DOWN) { /* if the middle button is clicked */
 			printf("middle mouse clicked at %d %d\n", x, y);
-			mouse_mode = MODE_SCALE;
+			mouseMove_mode = MODE_SCALE;
 			lastMouseX = x;
 		}
 		if (state == GLUT_UP) {
@@ -252,14 +258,14 @@ void mouse(int button, int state, int x, int y) {
 
 void mouseMove(int x, int y) {
 	//printf("mouse moved at %d %d\n", x, y);
-	if (mouse_mode == MODE_TRANSLATE) {
+	if (mouseMove_mode == MODE_TRANSLATE) {
 		translateM[0] -= p2w_x(lastMouseX) - p2w_x(x);
 		translateM[1] -= p2w_y(lastMouseY) - p2w_y(y);
 		lastMouseX = x;
 		lastMouseY = y;
 		glutPostRedisplay();
 	}
-	else if (mouse_mode == MODE_SCALE) {
+	else if (mouseMove_mode == MODE_SCALE) {
 		if (lastMouseX > x) {
 			// moving left, shrink
 			scaleM[0] = scaleM[1] -= .01;
@@ -277,15 +283,15 @@ void mouseMove(int x, int y) {
 		lastMouseX = x;
 		glutPostRedisplay();
 	}
-	else if (mouse_mode == MODE_ROTATE) {
+	else if (mouseMove_mode == MODE_ROTATE) {
 		endClick = Vector3D(p2w_x(x), p2w_y(y), 0);
 		endClick.scaleToOne();
 		endClick.bindZ();
 		Vector3D axisRot = startClick.crossProd(endClick);
 		float angleInDeg = rad2deg(findAngle(startClick, endClick));
-		cout << "start: " << startClick <<  " length: " << startClick.length() <<
-			cout << "end: " << endClick <<  " length: " << endClick.length() << endl;
-		cout << "axis: " << axisRot << endl;
+		//cout << "start: " << startClick <<  " length: " << startClick.length() <<
+		//	cout << "end: " << endClick <<  " length: " << endClick.length() << endl;
+		//cout << "axis: " << axisRot << endl;
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix(); {
 			glLoadIdentity();
@@ -308,13 +314,23 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'e': case 'E':
 		display_mode = display_mode == GL_LINE_LOOP ? GL_TRIANGLES : GL_LINE_LOOP;
 		break;
-	//case 'l':
-	//	light = !light;
-	//	if (light)
-	//		glEnable(GL_LIGHTING);
-	//	else
-	//		glDisable(GL_LIGHTING);
-	//	break;
+	case 'r' : case 'R' :
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+		glGetFloatv(GL_MODELVIEW_MATRIX, trackballM);
+		glPopMatrix();
+		scaleM[0] = scaleM[1] = scaleM[2] = 1.0;
+		translateM[0] = translateM[1] = translateM[2] = 0.0;
+		glutPostRedisplay();
+		break;
+	case 'l':
+		light = !light;
+		if (light)
+			glEnable(GL_LIGHTING);
+		else
+			glDisable(GL_LIGHTING);
+		break;
 	//	//simple way to toggle the materials
 	//case 'm':
 	//	mat++;
@@ -329,6 +345,10 @@ void keyboard(unsigned char key, int x, int y) {
 		break;
 	}
 	glutPostRedisplay();
+}
+
+void mouseModeHandler(int value) {
+	mouse_mode = value;
 }
 
 
@@ -349,6 +369,14 @@ int main( int argc, char** argv ) {
   glutKeyboardFunc( keyboard );
   glutMouseFunc( mouse );
   glutMotionFunc( mouseMove );
+
+  // set up right click menu
+  int rightMenu = glutCreateMenu(mouseModeHandler);
+  glutAddMenuEntry("Trackball input", MODE_TRACKBALL);
+  glutAddMenuEntry("Light input", MODE_LIGHT);
+
+  glutAttachMenu(GLUT_RIGHT_BUTTON);
+
   //enable z-buffer
   glEnable(GL_DEPTH_TEST);
   
