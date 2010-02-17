@@ -1,10 +1,9 @@
 #include <ostream>
 class Vector3D {
-private:
+public:
 	float x,y,z;
 	float xPos, yPos, zPos;
 
-public:
 	Vector3D() : x(0), y(0), z(0), xPos(0), yPos(0), zPos(0) {}
 	Vector3D(float _x, float _y, float _z, 
 			   float _xPos, float _yPos, float _zPos) : x(_x), y(_y), z(_z),
