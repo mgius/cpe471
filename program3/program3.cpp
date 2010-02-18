@@ -62,7 +62,8 @@ typedef struct materialStruct {
 	GLfloat shininess[1];
 } materialStruct;
 
-materialStruct materials[2] = {
+#define MATERIAL_COUNT 2
+materialStruct materials[MATERIAL_COUNT] = {
 	{
 		{0.3, 0.0, 0.0, 1.0},
 		{0.9, 0.0, 0.0, 1.0},
@@ -111,6 +112,8 @@ typedef struct Tri{
 vector<Tri *> Triangles;
 //stl vector to store all the vertices in the mesh
 vector<Vector3D *> Vertices;
+//stl vector to store the normals per vertice
+vector<Vector3D *> verticeNormals;
 
 //for computing the center point and extent of the model
 Vector3D center;
@@ -135,6 +138,7 @@ int mouseMove_mode = MODE_NONE;
 #define MODE_LIGHT 2
 int mouse_mode = MODE_TRACKBALL;
 
+int shading_mode = GL_FLAT;
 
 //forward declarations of functions
 void readLine(char* str);
@@ -146,6 +150,24 @@ void printFirstThree();
 void display();
 void computeNormals();
 void displayNormals();
+
+void init_lighting() {
+	//turn on light0
+	glEnable(GL_LIGHT0);
+	//set up the diffuse, ambient and specular components for the light
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diff);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light_amb);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, light_spec);
+	//specify our lighting model as 1 normal per face
+	glShadeModel(GL_FLAT);
+}
+
+void pos_light() {
+	//set the light's position
+	glMatrixMode(GL_MODELVIEW);
+	glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+}
+
 
 void setMaterial(materialStruct material) {
 	glMaterialfv(GL_FRONT, GL_AMBIENT, material.ambient);
@@ -161,12 +183,33 @@ void drawTria(Tri* t) {
 		glColor3f(0.0, 0.0, 0.5);
 		//note that the vertices are indexed starting at 0, but the triangles
 		//index them starting from 1, so we must offset by -1!!!
+		if (shading_mode == GL_FLAT) {
+			glNormal3f(t->normal.x, t->normal.y, t->normal.z);
+		}
+		else if (shading_mode == GL_SMOOTH) {
+			glNormal3f(verticeNormals[t->v1 - 1]->x,
+					     verticeNormals[t->v1 - 1]->y,
+					     verticeNormals[t->v1 - 1]->z);
+
+		}
 		glVertex3f(Vertices[t->v1 - 1]->x, 
 				Vertices[t->v1 - 1]->y,
 				Vertices[t->v1 - 1]->z);
+		if (shading_mode == GL_SMOOTH) {
+			glNormal3f(verticeNormals[t->v2 - 1]->x,
+					     verticeNormals[t->v2 - 1]->y,
+					     verticeNormals[t->v2 - 1]->z);
+
+		}
 		glVertex3f(Vertices[t->v2 - 1]->x, 
 				Vertices[t->v2 - 1]->y,
 				Vertices[t->v2 - 1]->z);
+		if (shading_mode == GL_SMOOTH) {
+			glNormal3f(verticeNormals[t->v3 - 1]->x,
+					     verticeNormals[t->v3 - 1]->y,
+					     verticeNormals[t->v3 - 1]->z);
+
+		}
 		glVertex3f(Vertices[t->v3 - 1]->x, 
 				Vertices[t->v3 - 1]->y,
 				Vertices[t->v3 - 1]->z);
@@ -198,7 +241,9 @@ void reshape(int w, int h) {
   glLoadIdentity();
   if (view_mode == VIEW_ORTHO)
     glOrtho( -2.0*(float)w/h, 2.0*(float)w/h, -2.0, 2.0, 1.0, 15.0);
-  //else... fill in
+  else if (view_mode == VIEW_PERSP) {
+	  gluPerspective(90, w/h, 1.0, 15.0);
+  }
   glMatrixMode(GL_MODELVIEW);
   glViewport(0, 0, w, h);
   
@@ -244,6 +289,8 @@ void display() {
 	glPushMatrix();
 	//set up the camera
 	gluLookAt(0, 0, 3.0, 0, 0, 0, 0, 1, 0);
+
+	pos_light();
 
 	drawObjects();
 
@@ -366,22 +413,33 @@ void keyboard(unsigned char key, int x, int y) {
 		translateM[0] = translateM[1] = translateM[2] = 0.0;
 		glutPostRedisplay();
 		break;
-	case 'l':
+	case 'l': case 'L':
 		light = !light;
 		if (light)
 			glEnable(GL_LIGHTING);
 		else
 			glDisable(GL_LIGHTING);
 		break;
-	//	//simple way to toggle the materials
-	//case 'm':
-	//	mat++;
-	//	if (mat%2 == 0)
-	//		materials(RedFlat);
-	//	else if (mat%2 == 1)
-	//		materials(GreenShiny);
-	//	break;
-
+		//simple way to toggle the materials
+	case 'm': case 'M':
+		static int mat = 0;
+		mat++;
+		setMaterial(materials[mat%MATERIAL_COUNT]);
+		break;
+	case 't': case 'T':
+		mouse_mode = mouse_mode == MODE_TRACKBALL ? MODE_LIGHT : MODE_TRACKBALL;
+		printf("%s mode\n", mouse_mode == MODE_TRACKBALL ? "Trackball" : "Light");
+		break;
+	case 'v': case 'V':
+		view_mode = view_mode == VIEW_ORTHO ? VIEW_PERSP : VIEW_ORTHO;
+		printf("%s mode\n", mouse_mode == VIEW_ORTHO ? "Ortho" : "PERSP");
+		reshape(GW, GH);
+		break;
+	case 's': case 'S':
+		shading_mode = shading_mode == GL_FLAT ? GL_SMOOTH : GL_FLAT;
+		printf("%s mode\n", shading_mode == GL_FLAT ? "Flat" : "Smooth");
+		glShadeModel(shading_mode);
+		break;
 	case 'q': case 'Q':
 		exit(0);
 		break;
@@ -389,84 +447,87 @@ void keyboard(unsigned char key, int x, int y) {
 	glutPostRedisplay();
 }
 
-void mouseModeHandler(int value) {
-	mouse_mode = value;
-}
-
-void materialHandler(int value) {
-	current_material = value;
-}
+//void mouseModeHandler(int value) {
+//	mouse_mode = value;
+//}
+//
+//void materialHandler(int value) {
+//	setMaterial(materials[value]);
+//}
 
 int main( int argc, char** argv ) {
-  
-  //set up my window
-  glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-  glutInitWindowSize(300, 300); 
-  glutInitWindowPosition(100, 100);
-  glutCreateWindow("Mesh display");
-  glClearColor(1.0, 1.0, 1.0, 1.0);
-  
-  //register glut callback functions
-  glutDisplayFunc( display );
-  glutReshapeFunc( reshape );
-  glutKeyboardFunc( keyboard );
-  glutMouseFunc( mouse );
-  glutMotionFunc( mouseMove );
 
-  // set up right click menu
+	//set up my window
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+	glutInitWindowSize(300, 300); 
+	glutInitWindowPosition(100, 100);
+	glutCreateWindow("Mesh display");
+	glClearColor(1.0, 1.0, 1.0, 1.0);
 
-  int materialMenu = glutCreateMenu(materialHandler);
-  glutAddMenuEntry("RedFlat", MATERIAL_REDFLAT);
-  glutAddMenuEntry("GreenShiny", MATERIAL_GREENSHINY);
+	//register glut callback functions
+	glutDisplayFunc( display );
+	glutReshapeFunc( reshape );
+	glutKeyboardFunc( keyboard );
+	glutMouseFunc( mouse );
+	glutMotionFunc( mouseMove );
 
-  int rightMenu = glutCreateMenu(mouseModeHandler);
-  glutAddMenuEntry("Trackball input", MODE_TRACKBALL);
-  glutAddMenuEntry("Light input", MODE_LIGHT);
-  glutAddSubMenu("Materials", materialMenu);
+	//// set up right click menu
 
-  glutAttachMenu(GLUT_RIGHT_BUTTON);
+	//int materialMenu = glutCreateMenu(materialHandler);
+	//glutAddMenuEntry("RedFlat", MATERIAL_REDFLAT);
+	//glutAddMenuEntry("GreenShiny", MATERIAL_GREENSHINY);
 
-  //enable z-buffer
-  glEnable(GL_DEPTH_TEST);
-  
-  //initialization
-  max_x = max_y = max_z = FLT_MIN;
-  min_x = min_y = min_z = FLT_MAX;
-  center.x = 0;
-  center.y = 0;
-  center.z = 0;
-  max_extent = 1.0;
-  
-  //make sure a file to read is specified
-  if (argc > 1) {
-    cout << "file " << argv[1] << endl;
-    //read-in the mesh file specified
-    ReadFile(argv[1]);
-    //only for debugging
-    if (Vertices.size() > 4)
-      printFirstThree();
-    
-    //once the file is parsed find out the maximum extent to center and scale mesh
-    max_extent = max_x - min_x;
-    if (max_y - min_y > max_extent) max_extent = max_y - min_y;
-    //cout << "max_extent " << max_extent << " max_x " << max_x << " min_x " << min_x << endl;
-    //cout << "max_y " << max_y << " min_y " << min_y << " max_z " << max_z << " min_z " << min_z << endl;
-    
-    center.x = center.x/Vertices.size();
-    center.y = center.y/Vertices.size();
-    center.z = center.z/Vertices.size();
-    //cout << "center " << center.x << " " << center.y << " " << center.z << endl;
-    //cout << "scale by " << 1.0/(float)max_extent << endl;
-  } else {
-    cout << "format is: meshparser filename" << endl;
-	 exit(1);
-  }
+	//int rightMenu = glutCreateMenu(mouseModeHandler);
+	//glutAddMenuEntry("Trackball input", MODE_TRACKBALL);
+	//glutAddMenuEntry("Light input", MODE_LIGHT);
+	//glutAddSubMenu("Materials", materialMenu);
 
-  computeNormals();
+	//glutAttachMenu(GLUT_RIGHT_BUTTON);
 
-  glEnable(GL_NORMALIZE);
-  glutMainLoop();
+	//enable z-buffer
+	glEnable(GL_DEPTH_TEST);
+
+	//initialization
+	max_x = max_y = max_z = FLT_MIN;
+	min_x = min_y = min_z = FLT_MAX;
+	center.x = 0;
+	center.y = 0;
+	center.z = 0;
+	max_extent = 1.0;
+
+	//make sure a file to read is specified
+	if (argc > 1) {
+		cout << "file " << argv[1] << endl;
+		//read-in the mesh file specified
+		ReadFile(argv[1]);
+		//only for debugging
+		if (Vertices.size() > 4)
+			printFirstThree();
+
+		//once the file is parsed find out the maximum extent to center and scale mesh
+		max_extent = max_x - min_x;
+		if (max_y - min_y > max_extent) max_extent = max_y - min_y;
+		//cout << "max_extent " << max_extent << " max_x " << max_x << " min_x " << min_x << endl;
+		//cout << "max_y " << max_y << " min_y " << min_y << " max_z " << max_z << " min_z " << min_z << endl;
+
+		center.x = center.x/Vertices.size();
+		center.y = center.y/Vertices.size();
+		center.z = center.z/Vertices.size();
+		//cout << "center " << center.x << " " << center.y << " " << center.z << endl;
+		//cout << "scale by " << 1.0/(float)max_extent << endl;
+	} else {
+		cout << "format is: meshparser filename" << endl;
+		exit(1);
+	}
+
+	computeNormals();
+	setMaterial(materials[MATERIAL_REDFLAT]);
+	init_lighting();
+
+
+	glEnable(GL_NORMALIZE);
+	glutMainLoop();
 }
 
 
@@ -474,6 +535,9 @@ int main( int argc, char** argv ) {
 // Ripped from lab7
 
 void computeNormals() {
+	for (int i = 0; i < Vertices.size(); i++) {
+		verticeNormals.push_back(new Vector3D());
+	}
    for (int i = 0; i < Triangles.size(); i++) {
       Tri *current = Triangles[i];
       Vector3D *top = Vertices[current->v1 - 1];
@@ -489,8 +553,14 @@ void computeNormals() {
 
       current->normal = leftEdge.crossProd(rightEdge);
       current->normal.normalize();
+		*verticeNormals[current->v1 - 1] += current->normal;
+		*verticeNormals[current->v2 - 1] += current->normal;
+		*verticeNormals[current->v3 - 1] += current->normal;
       //printf("normalized: %f, %f, %f, %f\n", current->normal.x, current->norma
    }
+	for(int i = 0; i < Vertices.size(); i++) {
+		verticeNormals[i]->normalize();
+	}
 }
 void drawNormals() {
    glBegin(GL_LINES); {
