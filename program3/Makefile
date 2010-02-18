@@ -1,7 +1,7 @@
 VPATH = Vector3D
 GL=-lGL -lglut
 HANDINFILES=*.cpp Vector3D/* Makefile README
-HANDINDIR=csc471p2
+HANDINDIR=csc471p3
 PROGRAMNAME=program3
 TARFILE=mgius_$(PROGRAMNAME).tar
 
