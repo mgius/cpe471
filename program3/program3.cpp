@@ -45,6 +45,40 @@ float findAngle(Vector3D &a, Vector3D &b) {
    return acos(a.dotProd(b) / (fabs(a.length()) * fabs(b.length())));
 }
 
+// this is modified from the simple_light provided files
+
+GLfloat light_pos[4] = {1.0, 1.0, 1.5, 1.0};
+GLfloat light_amb[4] = {0.6, 0.6, 0.6, 1.0};
+GLfloat light_diff[4] = {0.6, 0.6, 0.6, 1.0};
+GLfloat light_spec[4] = {0.8, 0.8, 0.8, 1.0};
+
+#define MATERIAL_REDFLAT 0
+#define MATERIAL_GREENSHINY 1
+
+typedef struct materialStruct {
+	GLfloat ambient[4];
+	GLfloat diffuse[4];
+	GLfloat specular[4];
+	GLfloat shininess[1];
+} materialStruct;
+
+materialStruct materials[2] = {
+	{
+		{0.3, 0.0, 0.0, 1.0},
+		{0.9, 0.0, 0.0, 1.0},
+		{0.0, 0.0, 0.0, 1.0},
+		{0.0}
+	},
+	{
+		{0.0, 0.3, 0.0, 1.0},
+		{0.0, 0.9, 0.0, 1.0},
+		{0.2, 1.0, 0.2, 1.0},
+		{8.0}
+	}
+};
+
+int current_material = MATERIAL_REDFLAT;
+
 /*an example of a simple data structure to store a 4x4 matrix */
 GLfloat objectM[4][4] = {
    {1.0, 0.0, 0.0, 0.0},
@@ -52,6 +86,7 @@ GLfloat objectM[4][4] = {
    {0.0, 0.0, 1.0, 0.0},
    {0.0, 0.0, 0.0, 1.0}
 };
+
 
 GLfloat *trackballM = (GLfloat *)objectM;
 
@@ -111,6 +146,13 @@ void printFirstThree();
 void display();
 void computeNormals();
 void displayNormals();
+
+void setMaterial(materialStruct material) {
+	glMaterialfv(GL_FRONT, GL_AMBIENT, material.ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, material.diffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, material.specular);
+	glMaterialfv(GL_FRONT, GL_SHININESS, material.shininess);
+}
 
 
 //drawing routine to draw triangles as wireframe
@@ -351,7 +393,9 @@ void mouseModeHandler(int value) {
 	mouse_mode = value;
 }
 
-
+void materialHandler(int value) {
+	current_material = value;
+}
 
 int main( int argc, char** argv ) {
   
@@ -371,9 +415,15 @@ int main( int argc, char** argv ) {
   glutMotionFunc( mouseMove );
 
   // set up right click menu
+
+  int materialMenu = glutCreateMenu(materialHandler);
+  glutAddMenuEntry("RedFlat", MATERIAL_REDFLAT);
+  glutAddMenuEntry("GreenShiny", MATERIAL_GREENSHINY);
+
   int rightMenu = glutCreateMenu(mouseModeHandler);
   glutAddMenuEntry("Trackball input", MODE_TRACKBALL);
   glutAddMenuEntry("Light input", MODE_LIGHT);
+  glutAddSubMenu("Materials", materialMenu);
 
   glutAttachMenu(GLUT_RIGHT_BUTTON);
 
