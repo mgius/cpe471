@@ -4,7 +4,6 @@ HANDINFILES=*.cpp Vector3D/* Makefile README
 HANDINDIR=csc471p2
 PROGRAMNAME=program3
 TARFILE=mgius_$(PROGRAMNAME).tar
-CXXFLAGS=-g
 
 all: $(PROGRAMNAME)
 
@@ -16,7 +15,6 @@ mkpackage: $(PROGRAMNAME)
 
 handin: mkpackage
 	handin zwood $(HANDINDIR) $(TARFILE)
-
 
 test: Vector3D.o VectorTests.o
 	g++ $(GL) -lm -o test Vector3D.o VectorTests.o
