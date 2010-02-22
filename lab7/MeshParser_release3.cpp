@@ -494,6 +494,7 @@ int main( int argc, char** argv ) {
 
   computeNormals();
   init_lighting();
+  glEnable(GL_NORMALIZE);
   glutMainLoop();
 }
 
