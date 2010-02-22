@@ -416,7 +416,7 @@ void display() {
     
   glPushMatrix();
   //set up the camera
-  gluLookAt(eyeX, eyeY, eyeZ, center.x, center.y, center.z, 0, 1, 0);
+  gluLookAt(eyeX, eyeY, eyeZ, lookX, lookY, lookZ, 0, 1, 0);
   printf("now looking from %f, %f, %f at %f, %f, %f\n", eyeX, eyeY, eyeZ, lookX, lookY, lookZ);
 
   pos_light();
@@ -430,6 +430,7 @@ void display() {
 }
 
 #define MODE_TRANSLATE 1
+#define MODE_ZOOM      2
 
 int mouse_mode = MODE_TRANSLATE;
 int lastMouseX, lastMouseY;
@@ -443,29 +444,33 @@ void mouse(int button, int state, int x, int y) {
 			lastMouseY = y;
 		}
 	}
+	if (button == GLUT_RIGHT_BUTTON) {
+		if (state == GLUT_DOWN) {
+			mouse_mode = MODE_ZOOM;
+
+			lastMouseY = y;
+		}
+	}
 }
 
 #define MOVE_AMT .05
 void mouseMove(int x, int y) {
 	if (mouse_mode == MODE_TRANSLATE) {
-		if (lastMouseX > x) {
-			eyeX -= MOVE_AMT;
-			lookX -= MOVE_AMT;
-		}
-		else {
-			eyeX += MOVE_AMT;
-			lookX += MOVE_AMT;
-		}
-		if (lastMouseY > y) {
-			eyeY -= MOVE_AMT;
-			lookY -= MOVE_AMT;
-		}
-		else {
-			eyeY += MOVE_AMT;
-			lookY += MOVE_AMT;
-		}
+		eyeX -= p2w_x(lastMouseX) - p2w_x(x);
+		eyeY -= p2w_y(lastMouseY) - p2w_y(y);
+		lookX -= p2w_x(lastMouseX) - p2w_x(x);
+		lookY -= p2w_y(lastMouseY) - p2w_y(y);
 		lastMouseX = x;
 		lastMouseY = y;
+		glutPostRedisplay();
+	}
+	else if (mouse_mode == MODE_ZOOM) {
+		eyeZ += p2w_x(lastMouseX) - p2w_x(x);
+		lookZ += p2w_x(lastMouseX) - p2w_x(x);
+		eyeZ += p2w_y(lastMouseY) - p2w_y(y);
+		lookZ += p2w_y(lastMouseY) - p2w_y(y);
+		lastMouseY = y;
+		lastMouseX = x;
 		glutPostRedisplay();
 	}
 }
@@ -478,24 +483,30 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'e': case 'E':
 		display_mode = display_mode == GL_LINE_LOOP ? GL_TRIANGLES : GL_LINE_LOOP;
 		break;
-   case 'l':
-    light = !light;
-    if (light)
-      glEnable(GL_LIGHTING);
-    else
-      glDisable(GL_LIGHTING);
-    break;
-    //simple way to toggle the materials
-  case 'm':
-    mat++;
-    if (mat%2 == 0)
-      materials(RedFlat);
-    else if (mat%2 == 1)
-      materials(GreenShiny);
-    break;
-  case 'v': case 'V':
+	case 'l':
+		light = !light;
+		if (light)
+			glEnable(GL_LIGHTING);
+		else
+			glDisable(GL_LIGHTING);
+		break;
+		//simple way to toggle the materials
+	case 'm':
+		mat++;
+		if (mat%2 == 0)
+			materials(RedFlat);
+		else if (mat%2 == 1)
+			materials(GreenShiny);
+		break;
+	case 'v': case 'V':
 		view_mode = view_mode == ORTHO ? PERS : ORTHO;
 		reshape(GW,GH);
+		break;
+	case 'r': case 'R':
+		lookX = center.x;
+		lookY = center.y;
+		lookZ = center.z;
+		eyeX = 0, eyeY = 0, eyeZ = 3.0;
 		break;
 
 
@@ -563,6 +574,7 @@ int main( int argc, char** argv ) {
 
   computeNormals();
   init_lighting();
+  glEnable(GL_NORMALIZE);
   glutMainLoop();
 }
 
