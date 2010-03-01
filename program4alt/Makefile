@@ -1,14 +1,13 @@
 VPATH = Vector3D
 GL=-lGL -lglut
 HANDINFILES=*.cpp Vector3D/* Makefile README
-HANDINDIR=csc471p4
-PROGRAMNAME=program4
+HANDINDIR=csc471p3
+PROGRAMNAME=program3
 TARFILE=mgius_$(PROGRAMNAME).tar
-CXXFLAGS=-Wall
 
 all: $(PROGRAMNAME)
 
-$(PROGRAMNAME): $(PROGRAMNAME).o Vector3D.o myModels.h
+$(PROGRAMNAME): $(PROGRAMNAME).o Vector3D.o
 	g++ -o $(PROGRAMNAME) $(GL) $(PROGRAMNAME).o Vector3D.o
 
 mkpackage: $(PROGRAMNAME)

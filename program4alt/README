@@ -1,0 +1,19 @@
+Controls:
+
+	n - Toggles display of normals
+	e - Toggles wireframe vs filled in mesh
+	r - Resets trackball transformations
+	l - Toggles lighting
+	m - Cycles through meshes
+	t - Toggles Trackball vs Light transformation mode
+	v - Toggles orthographic and perspective viewing
+	s - Toggles smooth vs simple shading
+	q - Quits the program
+
+When the mouse is in trackball mode
+  - left mouse is rotation
+  - right mouse is translation in the x/y axis
+  - middle mouse is scale
+
+When the mouse is in Light mode
+  - left mouse is translation in the x/y axis
