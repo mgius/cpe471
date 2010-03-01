@@ -242,7 +242,7 @@ void reshape(int w, int h) {
   if (view_mode == VIEW_ORTHO)
     glOrtho( -2.0*(float)w/h, 2.0*(float)w/h, -2.0, 2.0, 1.0, 15.0);
   else if (view_mode == VIEW_PERSP) {
-	  gluPerspective(90, w/h, 1.0, 15.0);
+	  gluPerspective(90, (double)w/(double)h, 1.0, 15.0);
   }
   glMatrixMode(GL_MODELVIEW);
   glViewport(0, 0, w, h);
@@ -450,7 +450,7 @@ void keyboard(unsigned char key, int x, int y) {
 		break;
 	case 'v': case 'V':
 		view_mode = view_mode == VIEW_ORTHO ? VIEW_PERSP : VIEW_ORTHO;
-		printf("%s mode\n", mouse_mode == VIEW_ORTHO ? "Ortho" : "PERSP");
+		printf("%s mode\n", view_mode == VIEW_ORTHO ? "Ortho" : "PERSP");
 		reshape(GW, GH);
 		break;
 	case 's': case 'S':
