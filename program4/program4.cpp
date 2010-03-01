@@ -329,6 +329,18 @@ void keyboard(unsigned char key, int x, int y) {
 		printf("%s mode\n", shading_mode == GL_FLAT ? "Flat" : "Smooth");
 		glShadeModel(shading_mode);
 		break;
+	case 'w': case 'W':
+		// forward
+		break;
+	case 'a': case 'A':
+		// left strafe
+		break;
+	case 's': case 'S':
+		// back
+		break;
+	case 'd': case 'D':
+		// right strafe
+		break;
 	case 'q': case 'Q':
 		exit(0);
 		break;

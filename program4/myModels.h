@@ -27,3 +27,11 @@ void drawSnowMan() {
 	} glutPopMatrix();
 
 }
+
+void drawPlane() {
+	glPushMatrix(); {
+		glColorf(1.0, 1.0, 0.0);
+		glScalef(1000, 1000, .001);
+		glutSolidCube(1);
+	} glPopMatrix();
+}
