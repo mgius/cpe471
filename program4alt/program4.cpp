@@ -123,20 +123,10 @@ float max_extent;
 // other globals
 #define VIEW_ORTHO 1
 #define VIEW_PERSP 2
-int view_mode = VIEW_ORTHO;
+int view_mode = VIEW_PERSP;
 bool show_normals = false;
 bool light = false;
 GLenum display_mode = GL_LINE_LOOP;
-
-#define MODE_NONE      0
-#define MODE_TRANSLATE 1
-#define MODE_ROTATE    2
-#define MODE_SCALE     4
-int mouseMove_mode = MODE_NONE;
-
-#define MODE_TRACKBALL 1
-#define MODE_LIGHT 2
-int mouse_mode = MODE_TRACKBALL;
 
 int shading_mode = GL_FLAT;
 
@@ -279,8 +269,8 @@ void drawObjects() {
 	} glPopMatrix();
 }
 
-float eyeX = 0.0, eyeY = 1.0, eyeZ = 3.0;
-float lookX = 0.0, lookY = 1.0, lookZ = 0.0;
+Vector3D eye(0.0,1.0,3.0);
+Vector3D look(0.0, 1.0, 0.0);
 void display() {
 
 	float numV = Vertices.size();
@@ -291,7 +281,7 @@ void display() {
 
 	glPushMatrix();
 	//set up the camera
-	gluLookAt(eyeX, eyeY, eyeZ, lookX, lookY, lookZ, 0, 1, 0);
+	gluLookAt(eye.x, eye.y, eye.z, look.x, look.y, look.z, 0, 1, 0);
 
 	pos_light();
 
@@ -304,115 +294,54 @@ void display() {
 
 }
 
-int lastMouseX, lastMouseY;
-
 void mouse(int button, int state, int x, int y) {
-	if (mouse_mode == MODE_TRACKBALL) {
-		// Rotate
-		if (button == GLUT_LEFT_BUTTON) {
-			if (state == GLUT_DOWN) { /* if the left button is clicked */
-				printf("left mouse clicked at %d %d\n", x, y);
-				mouseMove_mode = MODE_ROTATE;
-				startClick = Vector3D(p2w_x(x), p2w_y(y),0);
-				startClick.scaleToOne();
-				startClick.bindZ();
-				endClick = Vector3D(p2w_x(x), p2w_y(y),0);
-				endClick.scaleToOne();
-				endClick.bindZ();
-			}
-			if (state == GLUT_UP) {
-			}
+	if (button == GLUT_LEFT_BUTTON) {
+		if (state == GLUT_DOWN) { /* if the left button is clicked */
+			printf("left mouse clicked at %d %d\n", x, y);
+			startClick = Vector3D(p2w_x(x), p2w_y(y),0);
+			startClick.scaleToOne();
+			startClick.bindZ();
+			endClick = Vector3D(p2w_x(x), p2w_y(y),0);
+			endClick.scaleToOne();
+			endClick.bindZ();
 		}
-		// Move (translate)
-		if (button == GLUT_RIGHT_BUTTON) {
-			if (state == GLUT_DOWN) { /* if the left button is clicked */
-				printf("right mouse clicked at %d %d\n", x, y);
-				mouseMove_mode = MODE_TRANSLATE;
-
-				lastMouseX = x;
-				lastMouseY = y;
-			}
-			if (state == GLUT_UP) {
-
-			}
-
-		}
-		// Zoom (scale)
-		if (button == GLUT_MIDDLE_BUTTON) {
-			if (state == GLUT_DOWN) { /* if the middle button is clicked */
-				printf("middle mouse clicked at %d %d\n", x, y);
-				mouseMove_mode = MODE_SCALE;
-				lastMouseX = x;
-			}
-			if (state == GLUT_UP) {
-
-			}
+		if (state == GLUT_UP) {
 		}
 	}
-	else if (mouse_mode == MODE_LIGHT) {
-		if (button == GLUT_LEFT_BUTTON) {
-			lastMouseX = x;
-			lastMouseY = y;
+	if (button == GLUT_RIGHT_BUTTON) {
+		if (state == GLUT_DOWN) { /* if the left button is clicked */
+			printf("right mouse clicked at %d %d\n", x, y);
+		}
+		if (state == GLUT_UP) {
+		}
+	}
+	if (button == GLUT_MIDDLE_BUTTON) {
+		if (state == GLUT_DOWN) { /* if the middle button is clicked */
+			printf("middle mouse clicked at %d %d\n", x, y);
+		}
+		if (state == GLUT_UP) {
 		}
 	}
 }
 
 void mouseMove(int x, int y) {
-	//printf("mouse moved at %d %d\n", x, y);
-	if (mouse_mode == MODE_TRACKBALL) {
-		if (mouseMove_mode == MODE_TRANSLATE) {
-			translateM[0] -= p2w_x(lastMouseX) - p2w_x(x);
-			translateM[1] -= p2w_y(lastMouseY) - p2w_y(y);
-			lastMouseX = x;
-			lastMouseY = y;
-			glutPostRedisplay();
-		}
-		else if (mouseMove_mode == MODE_SCALE) {
-			if (lastMouseX > x) {
-				// moving left, shrink
-				scaleM[0] = scaleM[1] -= .01;
-				if (scaleM[0] <= 0.1) {
-					scaleM[0] = scaleM[1] = .1;
-				}
-			}
-			else {
-				//moving right, grow
-				scaleM[0] = scaleM[1] += .01;
-				if (scaleM[0] >= 3.0) {
-					scaleM[0] = scaleM[1] = 3.0;
-				}
-			}
-			lastMouseX = x;
-			glutPostRedisplay();
-		}
-		else if (mouseMove_mode == MODE_ROTATE) {
-			endClick = Vector3D(p2w_x(x), p2w_y(y), 0);
-			endClick.scaleToOne();
-			endClick.bindZ();
-			Vector3D axisRot = startClick.crossProd(endClick);
-			float angleInDeg = rad2deg(findAngle(startClick, endClick));
-			//cout << "start: " << startClick <<  " length: " << startClick.length() <<
-			//	cout << "end: " << endClick <<  " length: " << endClick.length() << endl;
-			//cout << "axis: " << axisRot << endl;
-			glMatrixMode(GL_MODELVIEW);
-			glPushMatrix(); {
-				glLoadIdentity();
-				glRotatef(angleInDeg, axisRot.getX(), axisRot.getY(), axisRot.getZ());
-				glMultMatrixf(trackballM);
-				glGetFloatv(GL_MODELVIEW_MATRIX, trackballM);
-			} glPopMatrix();
-			startClick = endClick;
-			glutPostRedisplay();
-		}
-	}
-	else if(mouse_mode == MODE_LIGHT) {
-		light_pos[0] -= p2w_x(lastMouseX) - p2w_x(x);
-		light_pos[1] -= p2w_y(lastMouseY) - p2w_y(y);
-		lastMouseX = x;
-		lastMouseY = y;
-		//printf("light at x: %f, y: %f\n", light_pos[0], light_pos[1]);
-		glutPostRedisplay();
-	}
+	endClick = Vector3D(p2w_x(x), p2w_y(y), 0);
+	endClick.scaleToOne();
+	endClick.bindZ();
+	Vector3D axisRot = startClick.crossProd(endClick);
+	float angleInDeg = rad2deg(findAngle(startClick, endClick));
+	//cout << "start: " << startClick <<  " length: " << startClick.length() <<
+	//	cout << "end: " << endClick <<  " length: " << endClick.length() << endl;
+	//cout << "axis: " << axisRot << endl;
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix(); {
+		glLoadIdentity();
+		glRotatef(angleInDeg, axisRot.getX(), axisRot.getY(), axisRot.getZ());
+		glMultMatrixf(trackballM);
+		glGetFloatv(GL_MODELVIEW_MATRIX, trackballM);
+	} glPopMatrix();
+	startClick = endClick;
+	glutPostRedisplay();
 }
 
 
@@ -421,23 +350,23 @@ void keyboard(unsigned char key, int x, int y) {
 	switch( key) {
    case 'w': case 'W':
       // forward
-		eyeZ += .05;
-		lookZ += .05;
+		eye.z -= .05;
+		look.z -= .05;
       break;
    case 'a': case 'A':
       // left strafe
-		eyeX -= .05;
-		lookX -= .05;
+		eye.x -= .05;
+		look.x -= .05;
       break;
    case 's': case 'S':
       // back
-		eyeZ -= .05;
-		lookZ -= .05;
+		eye.z += .05;
+		look.z += .05;
       break;
    case 'd': case 'D':
       // right strafe
-		eyeX += .05;
-		lookX += .05;
+		eye.x += .05;
+		look.x += .05;
       break;
 	case 'n': case 'N':
 		show_normals = !show_normals;
@@ -453,6 +382,8 @@ void keyboard(unsigned char key, int x, int y) {
 		glPopMatrix();
 		scaleM[0] = scaleM[1] = scaleM[2] = 1.0;
 		translateM[0] = translateM[1] = translateM[2] = 0.0;
+		eye = Vector3D(0.0, 1.0, 3.0);
+		look = Vector3D(0.0, 1.0, 0.0);
 		glutPostRedisplay();
 		break;
 	case 'l': case 'L':
@@ -468,13 +399,9 @@ void keyboard(unsigned char key, int x, int y) {
 		mat++;
 		setMaterial(materials[mat%MATERIAL_COUNT]);
 		break;
-	case 't': case 'T':
-		mouse_mode = mouse_mode == MODE_TRACKBALL ? MODE_LIGHT : MODE_TRACKBALL;
-		printf("%s mode\n", mouse_mode == MODE_TRACKBALL ? "Trackball" : "Light");
-		break;
 	case 'v': case 'V':
 		view_mode = view_mode == VIEW_ORTHO ? VIEW_PERSP : VIEW_ORTHO;
-		printf("%s mode\n", view_mode == VIEW_ORTHO ? "Ortho" : "PERSP");
+		printf("%s mode\n", view_mode == VIEW_ORTHO ? "Ortho" : "Persp");
 		reshape(GW, GH);
 		break;
 	case 'h': case 'H':
