@@ -294,6 +294,7 @@ void display() {
 
 }
 
+int lastMouseX, lastMouseY;
 void mouse(int button, int state, int x, int y) {
 	if (button == GLUT_LEFT_BUTTON) {
 		if (state == GLUT_DOWN) { /* if the left button is clicked */
@@ -304,6 +305,8 @@ void mouse(int button, int state, int x, int y) {
 			endClick = Vector3D(p2w_x(x), p2w_y(y),0);
 			endClick.scaleToOne();
 			endClick.bindZ();
+			lastMouseX = x;
+			lastMouseY = y;
 		}
 		if (state == GLUT_UP) {
 		}
@@ -416,14 +419,6 @@ void keyboard(unsigned char key, int x, int y) {
 	glutPostRedisplay();
 }
 
-//void mouseModeHandler(int value) {
-//	mouse_mode = value;
-//}
-//
-//void materialHandler(int value) {
-//	setMaterial(materials[value]);
-//}
-
 int main( int argc, char** argv ) {
 
 	//set up my window
@@ -440,19 +435,6 @@ int main( int argc, char** argv ) {
 	glutKeyboardFunc( keyboard );
 	glutMouseFunc( mouse );
 	glutMotionFunc( mouseMove );
-
-	//// set up right click menu
-
-	//int materialMenu = glutCreateMenu(materialHandler);
-	//glutAddMenuEntry("RedFlat", MATERIAL_REDFLAT);
-	//glutAddMenuEntry("GreenShiny", MATERIAL_GREENSHINY);
-
-	//int rightMenu = glutCreateMenu(mouseModeHandler);
-	//glutAddMenuEntry("Trackball input", MODE_TRACKBALL);
-	//glutAddMenuEntry("Light input", MODE_LIGHT);
-	//glutAddSubMenu("Materials", materialMenu);
-
-	//glutAttachMenu(GLUT_RIGHT_BUTTON);
 
 	//enable z-buffer
 	glEnable(GL_DEPTH_TEST);
