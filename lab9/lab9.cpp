@@ -13,7 +13,7 @@ int GH;
 // Location of the shoulder
 float armPosX = 0, armPosY = 0;
 // How far off perfectly straight the forearm should be roatated
-float foreArmRotate = 10.0;
+float foreArmRotate = 30.0;
 
 
 #define RED 0
@@ -36,20 +36,37 @@ inline float deg2rad(int deg) {
    return M_PI * deg / 180.0;
 }
 
-void idle() {
-	foreArmRotate += 1.0;
+void idle(int x) {
+	if (x == 0) {
+		foreArmRotate += 1.0;
+		if (foreArmRotate > 100.0) {
+			x = 1;
+		}
+	}
+	else {
+		foreArmRotate -= 1.0;
+		if (foreArmRotate < 30.0) {
+			x = 0;
+		}
+	}
+
+	printf("Hello %d\n", x);
+	glutTimerFunc( 24, idle, x);
 	glutPostRedisplay();
 }
 
 // Draws a two part arm using rectangles
 void drawArm() {
-	glColor3f(1.0, 0.0, 0.0);
-	glRectf( -.05, -.25, .05, .25);
 	glPushMatrix(); {
-		glTranslatef(.1, .1, .1);
-		glRotatef(deg2rad(foreArmRotate), 0,0,1);
-		glColor3f(0.0,1.0, 0.0);
-		glRectf(-.05, 0, .05, .50);
+		glColor3f(1.0, 0.0, 0.0);
+		glRotatef(45, 0,0,1);
+		glRectf( -.05, -.25, .05, .25);
+		glPushMatrix(); { // ForeArm
+			glTranslatef(0, -.20, .1);
+			glRotatef(foreArmRotate, 0,0,-1);
+			glColor3f(0.0,1.0, 0.0);
+			glRectf(-.05, 0, .05, .50);
+		} glPopMatrix();
 	} glPopMatrix();
 }
 
@@ -73,7 +90,10 @@ void display() {
 //	}
 //	glPopMatrix();
 
-	drawArm();
+	glPushMatrix(); {
+		glTranslatef(.2, .2, 0);
+		drawArm();
+	} glPopMatrix();
 
 	glutSwapBuffers();
 }
@@ -130,7 +150,7 @@ int main( int argc, char** argv ){
   glutMotionFunc( mouseMove );
   glutKeyboardFunc( keyboard );
   glutReshapeFunc( reshape );
-  glutIdleFunc( idle );
+  glutTimerFunc( 100, idle, 0);
 
 	glutMainLoop();
 }
