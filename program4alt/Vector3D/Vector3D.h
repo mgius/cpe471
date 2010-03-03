@@ -33,6 +33,10 @@ public:
 	void normalize(float scale = 1.0);
 	void scaleToOne();
 
+	Vector3D &rotateX(float);
+	Vector3D &rotateY(float);
+	Vector3D &rotateZ(float);
+
 	bool operator==(const Vector3D &right) const;
 
 
@@ -40,11 +44,14 @@ public:
 	Vector3D &operator+=(const Vector3D &right);
 	Vector3D operator-(const Vector3D &right) const;
 	Vector3D &operator-=(const Vector3D &right);
+	Vector3D operator*(float) const;
+	Vector3D &operator*=(float);
 	friend std::ostream& operator<< (std::ostream &out, const Vector3D &v) {
 		out << "X: " << v.x << " Y: " << v.y << " Z: " << v.z;
 
 		return out;
 	}
+
 
 };
 

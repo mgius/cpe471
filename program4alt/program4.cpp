@@ -270,7 +270,8 @@ void drawObjects() {
 }
 
 Vector3D eye(0.0,1.0,3.0);
-Vector3D look(0.0, 1.0, 0.0);
+Vector3D look(0.0, 1.0, 2.0);
+Vector3D up(0.0, 1.0, 0.0);
 void display() {
 
 	float numV = Vertices.size();
@@ -282,6 +283,8 @@ void display() {
 	glPushMatrix();
 	//set up the camera
 	gluLookAt(eye.x, eye.y, eye.z, look.x, look.y, look.z, 0, 1, 0);
+	
+	printf("eye at %f, %f, %f looking at %f, %f, %f\n", eye.x, eye.y, eye.z, look.x, look.y, look.z);
 
 	pos_light();
 
@@ -299,12 +302,6 @@ void mouse(int button, int state, int x, int y) {
 	if (button == GLUT_LEFT_BUTTON) {
 		if (state == GLUT_DOWN) { /* if the left button is clicked */
 			printf("left mouse clicked at %d %d\n", x, y);
-			startClick = Vector3D(p2w_x(x), p2w_y(y),0);
-			startClick.scaleToOne();
-			startClick.bindZ();
-			endClick = Vector3D(p2w_x(x), p2w_y(y),0);
-			endClick.scaleToOne();
-			endClick.bindZ();
 			lastMouseX = x;
 			lastMouseY = y;
 		}
@@ -328,48 +325,52 @@ void mouse(int button, int state, int x, int y) {
 }
 
 void mouseMove(int x, int y) {
-	endClick = Vector3D(p2w_x(x), p2w_y(y), 0);
-	endClick.scaleToOne();
-	endClick.bindZ();
-	Vector3D axisRot = startClick.crossProd(endClick);
-	float angleInDeg = rad2deg(findAngle(startClick, endClick));
-	//cout << "start: " << startClick <<  " length: " << startClick.length() <<
-	//	cout << "end: " << endClick <<  " length: " << endClick.length() << endl;
-	//cout << "axis: " << axisRot << endl;
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix(); {
-		glLoadIdentity();
-		glRotatef(angleInDeg, axisRot.getX(), axisRot.getY(), axisRot.getZ());
-		glMultMatrixf(trackballM);
-		glGetFloatv(GL_MODELVIEW_MATRIX, trackballM);
-	} glPopMatrix();
-	startClick = endClick;
+	
+	Vector3D view = look - eye;
+	lastMouseX = x;
+	lastMouseY = y;
 	glutPostRedisplay();
 }
 
-
-
+#define SCALE_FACTOR .1
 void keyboard(unsigned char key, int x, int y) {
+	// 90% of keyboard input will be movement, and c++ complains about 
+	// declarations within case statements, so calculate zoom and strafe
+	// vector here even if we're not going to use it
+	
+	Vector3D zoom = look - eye;
+	zoom.scaleToOne();
+	Vector3D strafe = zoom.crossProd(Vector3D(0,1,0));
+	Vector3D up = zoom.crossProd(strafe);
+
 	switch( key) {
    case 'w': case 'W':
       // forward
-		eye.z -= .05;
-		look.z -= .05;
+		//eye.z -= .05;
+		//look.z -= .05;
+		look += zoom * SCALE_FACTOR;
+		eye += zoom * SCALE_FACTOR;
       break;
    case 'a': case 'A':
       // left strafe
-		eye.x -= .05;
-		look.x -= .05;
+		//eye.x -= .05;
+		//look.x -= .05;
+		look -= strafe * SCALE_FACTOR;
+		eye -= strafe * SCALE_FACTOR;
       break;
    case 's': case 'S':
       // back
-		eye.z += .05;
-		look.z += .05;
+		//eye.z += .05;
+		//look.z += .05;
+		look -= zoom * SCALE_FACTOR;
+		eye -= zoom * SCALE_FACTOR;
       break;
    case 'd': case 'D':
       // right strafe
-		eye.x += .05;
-		look.x += .05;
+		//eye.x += .05;
+		//look.x += .05;
+		look += strafe * SCALE_FACTOR;
+		eye += strafe * SCALE_FACTOR;
       break;
 	case 'n': case 'N':
 		show_normals = !show_normals;

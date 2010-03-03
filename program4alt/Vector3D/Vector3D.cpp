@@ -79,6 +79,11 @@ void Vector3D::scaleToOne() {
 	}
 }
 
+Vector3D &rotateY(float) { 
+	x = x * cos(theta) + z * sin(theta);
+	z = -1 * x * sin(theta) + zcos(theta);
+}
+
 // Returns the length of the vector (which happens to be the sqrt of dotProd)
 float Vector3D::length() const {
 	return sqrtf(x *x + y*y + z*z);
@@ -116,3 +121,13 @@ Vector3D &Vector3D::operator-=(const Vector3D &right) {
 	return *this;
 }
 
+Vector3D Vector3D::operator*(float mult) const {
+	return Vector3D(x * mult, y * mult, z * mult);
+}
+
+Vector3D &Vector3D::operator*=(float mult) {
+	x *= mult;
+	y *= mult;
+	z *= mult;
+	return *this;
+}
