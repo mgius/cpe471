@@ -79,9 +79,9 @@ void Vector3D::scaleToOne() {
 	}
 }
 
-Vector3D &rotateY(float) { 
+Vector3D &Vector3D::rotateY(float theta) { 
 	x = x * cos(theta) + z * sin(theta);
-	z = -1 * x * sin(theta) + zcos(theta);
+	z = -1 * x * sin(theta) + z * cos(theta);
 }
 
 // Returns the length of the vector (which happens to be the sqrt of dotProd)
