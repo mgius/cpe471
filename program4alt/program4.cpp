@@ -141,6 +141,7 @@ void display();
 void computeNormals();
 void displayNormals();
 void drawAxes();
+void drawPlane();
 
 void init_lighting() {
 	//turn on light0
@@ -290,6 +291,7 @@ void display() {
 
 	drawObjects();
 	drawAxes();
+	drawPlane();
 
 	glPopMatrix();
 
@@ -324,13 +326,29 @@ void mouse(int button, int state, int x, int y) {
 	}
 }
 
+#define ROTATE_SCALE .5
+float phi = -15.0;
+float theta = 272.0;
 void mouseMove(int x, int y) {
 	
-	Vector3D view = look - eye;
+	theta -= ROTATE_SCALE * (lastMouseX - x);
+	phi += ROTATE_SCALE * (lastMouseY - y);
+	printf("theta %f, phi %f\n", theta, phi);
+
+	if (phi > 50.0) { phi = 50.0; }
+	if (theta > 360.0) { theta -= 360.0; }
+	if (phi < -50.0) { phi = -50.0; }
+	if (theta < 0.0) { theta += 360.0; }
+
+	look.x = eye.x + cos(deg2rad(phi)) * cos(deg2rad(theta));
+	look.y = eye.y + sin(deg2rad(phi));
+	look.z = eye.z + cos(deg2rad(phi)) * cos(90 - deg2rad(theta));
+
 	lastMouseX = x;
 	lastMouseY = y;
 	glutPostRedisplay();
 }
+#undef ROTATE_SCALE
 
 #define SCALE_FACTOR .1
 void keyboard(unsigned char key, int x, int y) {
@@ -387,7 +405,7 @@ void keyboard(unsigned char key, int x, int y) {
 		scaleM[0] = scaleM[1] = scaleM[2] = 1.0;
 		translateM[0] = translateM[1] = translateM[2] = 0.0;
 		eye = Vector3D(0.0, 1.0, 3.0);
-		look = Vector3D(0.0, 1.0, 0.0);
+		look = Vector3D(0.0, 0.0, 0.0);
 		glutPostRedisplay();
 		break;
 	case 'l': case 'L':
@@ -416,6 +434,11 @@ void keyboard(unsigned char key, int x, int y) {
 	case 'q': case 'Q':
 		exit(0);
 		break;
+	}
+	// Also since 90% of keyboard input is movement, might as well do this
+	// alll the time and save myself some code lines
+	if (eye.y < 1.0) {
+		eye.y = 1.0;
 	}
 	glutPostRedisplay();
 }
@@ -697,3 +720,13 @@ void drawAxes() {
    glLineWidth(oldWidth);
 }
 
+void drawPlane() {
+	glColor3f(1.0, 1.0, 0.0);
+	glBegin(GL_QUADS); {
+		glVertex3f(-100.0, -1.0, -100.0);
+		glVertex3f(-100.0, -1.0,  100.0);
+		glVertex3f( 100.0, -1.0,  100.0);
+		glVertex3f( 100.0, -1.0, -100.0);
+	} glEnd();
+
+}
