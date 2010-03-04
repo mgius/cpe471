@@ -47,13 +47,16 @@ float findAngle(Vector3D &a, Vector3D &b) {
 
 // this is modified from the simple_light provided files
 
-GLfloat light_pos[4] = {1.0, 1.0, 1.5, 1.0};
-GLfloat light_amb[4] = {0.6, 0.6, 0.6, 1.0};
+GLfloat light_pos[4] = {1.0, 20.0, 1.5, 1.0};
+GLfloat light_amb[4] = {1.0, 1.0, 1.0, 1.0};
 GLfloat light_diff[4] = {0.6, 0.6, 0.6, 1.0};
 GLfloat light_spec[4] = {0.8, 0.8, 0.8, 1.0};
 
 #define MATERIAL_REDFLAT 0
 #define MATERIAL_GREENSHINY 1
+#define MATERIAL_BLUEFLAT 2
+#define MATERIAL_YELLOWFLAT 3
+#define MATERIAL_BLACKFLAT 4
 
 typedef struct materialStruct {
 	GLfloat ambient[4];
@@ -62,7 +65,7 @@ typedef struct materialStruct {
 	GLfloat shininess[1];
 } materialStruct;
 
-#define MATERIAL_COUNT 2
+#define MATERIAL_COUNT 5
 materialStruct materials[MATERIAL_COUNT] = {
 	{
 		{0.3, 0.0, 0.0, 1.0},
@@ -75,26 +78,27 @@ materialStruct materials[MATERIAL_COUNT] = {
 		{0.0, 0.9, 0.0, 1.0},
 		{0.2, 1.0, 0.2, 1.0},
 		{8.0}
-	}
+	},
+	{
+		{0.0, 0.0, 0.5, 1.0},
+		{0.0, 0.0, 0.8, 1.0},
+		{0.2, 0.2, 1.0, 1.0},
+		{0.0}
+	},
+	{
+		{0.9, 1.0, 0.5, 1.0},
+		{0.0, 0.0, 0.0, 1.0},
+		{0.2, 0.2, 0.0, 1.0},
+		{0.0}
+	},
+	{
+		{0.1, 0.1, 0.1, 1.0},
+		{0.1, 0.1, 0.1, 1.0},
+		{0.1, 0.1, 0.1, 1.0},
+		{0.0}
+	},
 };
 
-int current_material = MATERIAL_REDFLAT;
-
-/*an example of a simple data structure to store a 4x4 matrix */
-GLfloat objectM[4][4] = {
-   {1.0, 0.0, 0.0, 0.0},
-   {0.0, 1.0, 0.0, 0.0},
-   {0.0, 0.0, 1.0, 0.0},
-   {0.0, 0.0, 0.0, 1.0}
-};
-
-
-GLfloat *trackballM = (GLfloat *)objectM;
-
-GLfloat translateM[3] = {0.0, 0.0, 0.0};
-GLfloat scaleM[3] = {1.0, 1.0, 1.0};
-
-Vector3D startClick, endClick;
 
 //data structure to store triangle - 
 //note that v1, v2, and v3 are indexes into the vertex array
@@ -125,10 +129,10 @@ float max_extent;
 #define VIEW_PERSP 2
 int view_mode = VIEW_PERSP;
 bool show_normals = false;
-bool light = false;
+bool light = true;
 GLenum display_mode = GL_LINE_LOOP;
 
-int shading_mode = GL_FLAT;
+int shading_mode = GL_SMOOTH;
 
 //forward declarations of functions
 void readLine(char* str);
@@ -142,6 +146,8 @@ void computeNormals();
 void displayNormals();
 void drawAxes();
 void drawPlane();
+void drawIceCream();
+void drawSnowMan();
 
 void init_lighting() {
 	//turn on light0
@@ -151,7 +157,7 @@ void init_lighting() {
 	glLightfv(GL_LIGHT0, GL_AMBIENT, light_amb);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, light_spec);
 	//specify our lighting model as 1 normal per face
-	glShadeModel(GL_FLAT);
+	glShadeModel(GL_SMOOTH);
 }
 
 void pos_light() {
@@ -244,30 +250,20 @@ void reshape(int w, int h) {
 
 void drawObjects() {
   
-	//transforms for the mesh
-	glPushMatrix(); {
-      // My transforms for trackball func
-		glTranslatef(translateM[0], translateM[1], translateM[2]);
-      glScalef(scaleM[0], scaleM[1], scaleM[2]);
-      glMultMatrixf(trackballM);
+	// Snowmen
+	for (int i = -3; i < 10; i++) {
+		glPushMatrix(); {
+			glTranslatef(i*2 + 1, 1.0, i * 3 );
+			drawSnowMan();
+		} glPopMatrix();
+	}
+	for (int i = -5; i < 13; i++) {
+		glPushMatrix(); {
+			glTranslatef(i -1 , 1.0, -i);
+			drawIceCream();
+		} glPopMatrix();
+	}
 
-		//leave these transformations in as they center and scale each mesh correctly
-		//scale object to window
-		glScalef(1.0/(float)max_extent, 1.0/(float)max_extent, 1.0/(float)max_extent);
-		//translate the object to the orgin
-		glTranslatef(-(center.x), -(center.y), -(center.z));
-		//draw the wireframe mesh
-		for(unsigned int j = 0; j < Triangles.size(); j++) {
-			drawTria(Triangles[j]);
-		}
-	} glPopMatrix();
-
-	//transforms for the sphere
-	glPushMatrix(); {
-		//draw the glut sphere behind the mesh
-		glTranslatef(1.25, 0.0, -2.0);
-		drawSphere();
-	} glPopMatrix();
 }
 
 Vector3D eye(0.0,1.0,3.0);
@@ -281,7 +277,7 @@ void display() {
 
 	glMatrixMode(GL_MODELVIEW);
 
-	glPushMatrix();
+	glPushMatrix(); {
 	//set up the camera
 	gluLookAt(eye.x, eye.y, eye.z, look.x, look.y, look.z, 0, 1, 0);
 	
@@ -289,11 +285,14 @@ void display() {
 
 	pos_light();
 
-	drawObjects();
-	drawAxes();
-	drawPlane();
+	glPushMatrix(); {
+		glTranslatef(0, -.5, 0);
+		drawPlane();
+		drawObjects();
+	} glPopMatrix();
+	//drawAxes();
 
-	glPopMatrix();
+	} glPopMatrix();
 
 	glutSwapBuffers();
 
@@ -327,13 +326,13 @@ void mouse(int button, int state, int x, int y) {
 }
 
 #define ROTATE_SCALE .5
-float phi = -15.0;
+float phi = 0.0;
 float theta = 272.0;
 void mouseMove(int x, int y) {
 	
 	theta -= ROTATE_SCALE * (lastMouseX - x);
 	phi += ROTATE_SCALE * (lastMouseY - y);
-	printf("theta %f, phi %f\n", theta, phi);
+	//printf("theta %f, phi %f\n", theta, phi);
 
 	if (phi > 50.0) { phi = 50.0; }
 	if (theta > 360.0) { theta -= 360.0; }
@@ -400,31 +399,12 @@ void keyboard(unsigned char key, int x, int y) {
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
-		glGetFloatv(GL_MODELVIEW_MATRIX, trackballM);
 		glPopMatrix();
-		scaleM[0] = scaleM[1] = scaleM[2] = 1.0;
-		translateM[0] = translateM[1] = translateM[2] = 0.0;
-		eye = Vector3D(0.0, 1.0, 3.0);
-		look = Vector3D(0.0, 0.0, 0.0);
+		eye.set(0.0, 1.0, 3.0);
+		look.set(0.0, 0.0, 0.0);
+		phi = -15.0;
+		theta = 272.0;
 		glutPostRedisplay();
-		break;
-	case 'l': case 'L':
-		light = !light;
-		if (light)
-			glEnable(GL_LIGHTING);
-		else
-			glDisable(GL_LIGHTING);
-		break;
-		//simple way to toggle the materials
-	case 'm': case 'M':
-		static int mat = 0;
-		mat++;
-		setMaterial(materials[mat%MATERIAL_COUNT]);
-		break;
-	case 'v': case 'V':
-		view_mode = view_mode == VIEW_ORTHO ? VIEW_PERSP : VIEW_ORTHO;
-		printf("%s mode\n", view_mode == VIEW_ORTHO ? "Ortho" : "Persp");
-		reshape(GW, GH);
 		break;
 	case 'h': case 'H':
 		shading_mode = shading_mode == GL_FLAT ? GL_SMOOTH : GL_FLAT;
@@ -439,6 +419,7 @@ void keyboard(unsigned char key, int x, int y) {
 	// alll the time and save myself some code lines
 	if (eye.y < 1.0) {
 		eye.y = 1.0;
+		look.y = eye.y + sin(deg2rad(phi));
 	}
 	glutPostRedisplay();
 }
@@ -497,11 +478,11 @@ int main( int argc, char** argv ) {
 	}
 
 	computeNormals();
-	setMaterial(materials[MATERIAL_REDFLAT]);
 	init_lighting();
 
 
 	glEnable(GL_NORMALIZE);
+	glEnable(GL_LIGHTING);
 	glutMainLoop();
 }
 
@@ -721,12 +702,47 @@ void drawAxes() {
 }
 
 void drawPlane() {
-	glColor3f(1.0, 1.0, 0.0);
+	setMaterial(materials[MATERIAL_REDFLAT]);
 	glBegin(GL_QUADS); {
-		glVertex3f(-100.0, -1.0, -100.0);
-		glVertex3f(-100.0, -1.0,  100.0);
-		glVertex3f( 100.0, -1.0,  100.0);
-		glVertex3f( 100.0, -1.0, -100.0);
+		glVertex3f(-100.0, 0, -100.0);
+		glVertex3f(-100.0, 0,  100.0);
+		glVertex3f( 100.0, 0,  100.0);
+		glVertex3f( 100.0, 0, -100.0);
 	} glEnd();
 
 }
+
+void drawIceCream() {
+   glPushMatrix(); {
+      // Rotate the whole cone to be oriented in the negative X direction
+      glRotatef(90, 1, 0, 0);
+		setMaterial(materials[MATERIAL_YELLOWFLAT]);
+      glutSolidCone(.5, 3, 10, 10);
+      glPushMatrix(); {
+         glTranslatef(0, 0, -.5);
+			setMaterial(materials[MATERIAL_GREENSHINY]);
+         glutSolidSphere(.6, 10, 10);
+      } glPopMatrix();
+   } glPopMatrix();
+}
+
+void drawSnowMan() {
+	setMaterial(materials[MATERIAL_BLUEFLAT]);
+   glutSolidSphere(1, 10, 10);
+   glPushMatrix(); {
+      // Move it bottom sphere and middle sphere, minus a bit
+      glTranslatef(0, 1.6, 0);
+		setMaterial(materials[MATERIAL_BLACKFLAT]);
+      glutSolidSphere(.8, 10, 10);
+
+      glPushMatrix(); {
+         // Move it middle sphere and top sphere, minus a bit
+         glTranslatef(0, 1.1, 0);
+			setMaterial(materials[MATERIAL_BLUEFLAT]);
+         glutSolidSphere(.5, 10, 10);
+      } glPopMatrix();
+
+   } glPopMatrix();
+
+}
+
