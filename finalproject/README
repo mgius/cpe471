@@ -1,0 +1,12 @@
+Controls:
+
+	wasd - Moves the camera
+	q - Quits the program
+
+  left mouse looks around the world
+
+Notes:
+
+Cannot fly through the floor.
+
+
