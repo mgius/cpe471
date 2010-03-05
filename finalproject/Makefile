@@ -17,10 +17,9 @@ handin: mkpackage
 	handin zwood $(HANDINDIR) $(TARFILE)
 	handin zwood $(HANDINDIR)
 
-test: Vector3D.o VectorTests.o
-	g++ $(GL) -lm -o test Vector3D.o VectorTests.o
-	@echo "Running Vector Tests"
-	@./test
+test:
+	python Vector3D/VectorTests.py
 
 clean:
 	rm -f *.o $(PROGRAMNAME) $(TARFILE) test
+	find . -iname '*.pyc' -exec rm {} \;
