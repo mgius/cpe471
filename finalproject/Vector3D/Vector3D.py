@@ -1,4 +1,10 @@
+'''
+Module level comment bwahahaha
+'''
 from math import sqrt
+
+__all__ = ["Vector3D"]
+
 class Vector3D():
     '''
     3D Vector reprentation class for CPE471
@@ -21,12 +27,12 @@ class Vector3D():
         return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
 
     def dotProd(self, other):
-        return self.x * other.x + self.y * other.y + self.z + other.z
+        return self.x * other.x + self.y * other.y + self.z * other.z
 
     def crossProd(self, other):
-        return Vector3D(x = y * right.z - z * right.y,
-                        y = z * right.x - x * right.z,
-                        z = x * right.y - y * right.x)
+        return Vector3D(x = self.y * other.z - self.z * other.y,
+                        y = self.z * other.x - self.x * other.z,
+                        z = self.x * other.y - self.y * other.x)
 
     def translate(self, x,y,z):
 	    self.xPos += x
@@ -49,9 +55,7 @@ class Vector3D():
 
     # operator overloads
     def __add__(self, other):
-        self.x += other.x
-        self.y += other.y
-        self.z += other.z
+        return Vector3D(self.x + other.x, self.y + other.y, self.z + other.z)
 
     def __iadd__(self, other):
         self.x += other.x
@@ -60,9 +64,7 @@ class Vector3D():
         return self
 
     def __sub__(self, other):
-        self.x -= other.x
-        self.y -= other.y
-        self.z -= other.z
+        return Vector3D(self.x - other.x, self.y - other.y, self.z - other.z)
 
     def __isub__(self, other):
         self.x -= other.x
@@ -71,15 +73,26 @@ class Vector3D():
         return self
 
     def __mul__(self, mult):
-        self.x *= mult
-        self.y *= mult
-        self.z *= mult
+        return Vector3D(self.x * mult, self.y * mult, self.z * mult)
 
     def __imul__(self, mult):
         self.x *= mult
         self.y *= mult
         self.z *= mult
         return self
+
+    def __eq__(self, other):
+        if self.x == other.x and \
+           self.y == other.y and \
+           self.z == other.z and \
+           self.xPos == other.xPos and \
+           self.yPos == other.yPos and \
+           self.zPos == other.zPos:
+            return True
+        else:
+            return False
+    def __ne__(self, oth):
+        return not self == oth
 
     def __str__(self):
         return "Vector3D at (%f,%f,%f) with components (%f,%f, %f)" % \
