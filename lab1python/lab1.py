@@ -67,15 +67,15 @@ def mouse(button, state, x, y):
 
 	if (button == GLUT_LEFT_BUTTON):
 		if (state == GLUT_DOWN):
-			printf("mouse clicked at %d %d (%f, %f)\n", x, y, p2w_x(x), p2w_y(y) )
+			print "mouse clicked at %d %d (%f, %f)\n" % (x, y, p2w_x(x), p2w_y(y)) 
 			temp = (p2w_x(x), p2w_y(y))
 			pts.append(temp)
 			glutPostRedisplay()
 
 def mouseMove(x, y):
 	global pts
-	temp = (pw2_x(x), p2w_y(y))
-	pts.push_back(temp)
+	temp = (p2w_x(x), p2w_y(y))
+	pts.append(temp)
 	glutPostRedisplay()
 
 def keyboard(key, x, y ):
