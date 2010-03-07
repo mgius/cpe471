@@ -7,7 +7,7 @@ from OpenGL.GLU  import *
 from OpenGL.GL   import *
 from Vector3D.Vector3D import *
 
-''' Any materials I might need in a dictionary '''
+# Any materials I might need in a dictionary
 materials = { 
     'redflat': ( 
         [0.3, 0.0, 0.0, 1.0],
@@ -42,6 +42,10 @@ materials = {
 }
 
 def setMaterial(material):
+    ''' 
+    Given a tuple that contains the arrays for the four material properties
+    unpack the tuple and apply the material properties
+    '''
     ambient, diffuse, specular, shininess = material
     glMaterial(GL_FRONT, GL_AMBIENT, ambient)
     glMaterial(GL_FRONT, GL_DIFFUSE, diffuse)
@@ -50,7 +54,12 @@ def setMaterial(material):
 
 
 class drawable():
+    '''
+    Anything that can be drawn onto an openGL canvas
 
+    The draw() function will draw assuming it is at 0,0,0, but you
+    are welcome to translate before calling draw if you'd like.
+    '''
    # constructor
     def __init__(self, position=Vector3D()):
         self.position=position
@@ -148,3 +157,36 @@ class Axes(drawable):
 
         glLineWidth(oldWidth)
 
+class Peg(drawable):
+    '''
+    Peg object.  The position of the peg should be relative to the board
+    '''
+    def __init__(self, position=Vector3D(), quadric=gluNewQuadric()):
+        drawable.__init__(self, position=position)
+        # I'm not too sure what this quadric thing does exactly, but...
+        self.quadric = quadric
+
+    def draw(self):
+        pass
+
+class PlinkoBoard(drawable):
+    '''
+    The gameboard.  Generates its own pattern of pegs if not provided 
+    with one.
+    '''
+    def __init__(self, position=Vector3D(), pegs=None):
+        self.position=position
+        if pegs == None:
+            self.pegs = self.generatePegs()
+        else:
+            self.pegs = pegs
+
+
+    def generatePegs(self):
+        pass
+
+    def draw():
+        # draw the flat board
+        # draw the pegs
+        for peg in self.pegs:
+            peg.draw()
