@@ -1,16 +1,15 @@
-VPATH = Vector3D
-GL=-lGL -lglut
-HANDINFILES=*.cpp Vector3D/* Makefile README
+HANDINFILES=*.py Vector3D/*.py Makefile README
 HANDINDIR=csc471p4
 PROGRAMNAME=plinko
 TARFILE=mgius_$(PROGRAMNAME).tar
 
 all: $(PROGRAMNAME)
 
-$(PROGRAMNAME): $(PROGRAMNAME).o Vector3D.o
-	g++ -o $(PROGRAMNAME) $(GL) $(PROGRAMNAME).o Vector3D.o
+$(PROGRAMNAME):
+	@echo "Python doesn't need to be compiled :D.  You can run the program with"
+	@echo "python plinko.py"
 
-mkpackage: $(PROGRAMNAME)
+mkpackage:
 	tar -cf $(TARFILE) $(HANDINFILES)
 
 handin: mkpackage
@@ -21,5 +20,5 @@ test:
 	python Vector3D/VectorTests.py
 
 clean:
-	rm -f *.o $(PROGRAMNAME) $(TARFILE) test
+	rm -f $(TARFILE)
 	find . -iname '*.pyc' -exec rm {} \;
