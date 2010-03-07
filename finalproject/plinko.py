@@ -6,13 +6,21 @@ from models import *
 from util import *
 from Vector3D.Vector3D import *
 
-# Camera globals
-(eyeX, eyeY, eyeZ) = (0.0, 1.0, 3.0)
-(lookX, lookY, lookZ) = (0.0, 1.0, 2.0)
-(upX, upY, upZ) = (0.0, 1.0, 0.0)
+from math import sin,cos
 
-phi = 0.0;
-theta = 272.0;
+import sys
+
+# models list
+
+modelsList = []
+
+# Camera globals
+eye = Vector3D(0.0, 1.0, 3.0)
+look = Vector3D(0.0, 1.0, 2.0)
+up = Vector3D(0.0, 1.0, 0.0)
+
+phi = 0.0
+theta = 272.0
 
 # Lighting Globals
 light_pos = [1.0, 20.0, 1.5, 1.0]
@@ -20,206 +28,159 @@ light_amb = [1.0, 1.0, 1.0, 1.0]
 light_diff = [0.6, 0.6, 0.6, 1.0]
 light_spec = [0.8, 0.8, 0.8, 1.0]
 
-void init_lighting();
-void pos_light();
+def init_lighting():
+    global light_diff, light_amb, light_spec
+    # turn on light0
+    glEnable(GL_LIGHT0)
+    # set up the diffuse, ambient and specular components for the light
+    glLight(GL_LIGHT0, GL_DIFFUSE, light_diff)
+    glLight(GL_LIGHT0, GL_AMBIENT, light_amb)
+    glLight(GL_LIGHT0, GL_SPECULAR, light_spec)
+    # specify our lighting model as 1 normal per face
+    glShadeModel(GL_SMOOTH)
 
-// forward declarations of functions I wrote
-void drawObjects();
-void display();
-void reshape(int, int);
-void mouse(int,int,int,int);
-void mouseMove(int, int);
+def pos_light():
+    global light_pos
+    # set the light's position
+    glMatrixMode(GL_MODELVIEW)
+    glLight(GL_LIGHT0, GL_POSITION, light_pos)
 
-# Mouse movement
+
+# input handling
 (lastMouseX, lastMouseY) = (0,0)
-#define SCALE_FACTOR .1
-void keyboard(unsigned char key, int x, int y) {
-	// 90% of keyboard input will be movement, and c++ complains about 
-	// declarations within case statements, so calculate zoom and strafe
-	// vector here even if we're not going to use it
-	
-	Vector3D zoom = look - eye;
-	zoom.scaleToOne();
-	Vector3D strafe = zoom.crossProd(Vector3D(0,1,0));
-	Vector3D up = zoom.crossProd(strafe);
 
-	switch( key) {
-   case 'w': case 'W':
-      // forward
-		look += zoom * SCALE_FACTOR;
-		eye += zoom * SCALE_FACTOR;
-      break;
-   case 'a': case 'A':
-      // left strafe
-		look -= strafe * SCALE_FACTOR;
-		eye -= strafe * SCALE_FACTOR;
-      break;
-   case 's': case 'S':
-      // back
-		look -= zoom * SCALE_FACTOR;
-		eye -= zoom * SCALE_FACTOR;
-      break;
-   case 'd': case 'D':
-      // right strafe
-		look += strafe * SCALE_FACTOR;
-		eye += strafe * SCALE_FACTOR;
-      break;
-	case 'r' : case 'R' :
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
-		glPopMatrix();
-		eye.set(0.0, 1.0, 3.0);
-		look.set(0.0, 0.0, 0.0);
-		phi = -15.0;
-		theta = 272.0;
-		glutPostRedisplay();
-		break;
-	case 'q': case 'Q':
-		exit(0);
-		break;
-	}
-	// Also since 90% of keyboard input is movement, might as well do this
-	// all the time and save myself some code lines
-	if (eye.y < 1.0) {
-		eye.y = 1.0;
-		look.y = eye.y + sin(deg2rad(phi));
-	}
-	glutPostRedisplay();
-}
+def keyboard(key, x, y):
+    global look, eye, phi, theta
+    scale_factor = .1
+    
+    zoom = look - eye
+    zoom.scaleToOne()
+    strafe = zoom.crossProd(Vector3D(0,1,0))
+    up = zoom.crossProd(strafe)
 
-int main( int argc, char** argv ) {
+    if key == 'w' or key == 'W':
+        look += zoom * scale_factor
+        eye += zoom * scale_factor
 
-	//set up my window
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-	glutInitWindowSize(300, 300); 
-	glutInitWindowPosition(100, 100);
-	glutCreateWindow("Mesh display");
-	glClearColor(1.0, 1.0, 1.0, 1.0);
+    elif key == 'a' or key == 'A':
+        look -= strafe * scale_factor
+        eye -= strafe * scale_factor
 
-	//register glut callback functions
-	glutDisplayFunc( display );
-	glutReshapeFunc( reshape );
-	glutKeyboardFunc( keyboard );
-	glutMouseFunc( mouse );
-	glutMotionFunc( mouseMove );
+    elif key == 's' or key == 'S':
+        look -= zoom * scale_factor
+        eye -= zoom * scale_factor
 
-	//enable z-buffer
-	glEnable(GL_DEPTH_TEST);
+    elif key == 'd' or key == 'D':
+        look += strafe * scale_factor
+        eye += strafe * scale_factor
 
-	//initialization
+    elif key == 'r' or key == 'R':
+        glMatrixMode(GL_MODELVIEW)
+        glPushMatrix()
+        glLoadIdentity()
+        glPopMatrix()
+        eye.set(0.0, 1.0, 3.0)
+        look.set(0.0, 0.0, 0.0)
+        phi = 0.0
+        theta = 272.0
+        glutPostRedisplay()
+    elif key == 'q' or key == 'Q':
+        exit(0)
 
-	init_lighting();
+    if eye.y < 1.0:
+        eye.y = 1.0
+        look.y = eye.y + sin(deg2rad(phi))
 
-	glEnable(GL_NORMALIZE);
-	glEnable(GL_LIGHTING);
-	glutMainLoop();
-}
+    glutPostRedisplay()
 
-// Helper functions go down here.  That's right, I'm segregationist
-void init_lighting() {
-	//turn on light0
-	glEnable(GL_LIGHT0);
-	//set up the diffuse, ambient and specular components for the light
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diff);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, light_amb);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, light_spec);
-	//specify our lighting model as 1 normal per face
-	glShadeModel(GL_SMOOTH);
-}
+def mouse(button, state, x, y):
+    global lastMouseX, lastMouseY
+    if button == GLUT_LEFT_BUTTON:
+        if state == GLUT_DOWN:
+            print "left mouse clicked at %d %d\n" % (x, y)
+            lastMouseX = x
+            lastMouseY = y
 
-void pos_light() {
-	//set the light's position
-	glMatrixMode(GL_MODELVIEW);
-	glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
-}
+def mouseMove(x, y):
+    global theta, phi, look, lastMouseX, lastMouseY
+    rotate_scale = .5
 
+    theta -= rotate_scale * (lastMouseX - x)
+    phi += rotate_scale * (lastMouseY - y)
 
-void reshape(int w, int h) {
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(90, (double)w/(double)h, 1.0, 15.0);
-  glMatrixMode(GL_MODELVIEW);
-  glViewport(0, 0, w, h);
+    phi = phi if phi < 50.0 else 50.0
+    phi = phi if phi > -50.0 else -50.0
+    theta = theta if theta > 360 else theta - 360.0
+    theta = theta if theta < 360 else theta + 360.0
+
+    look.x = eye.x + cos(deg2rad(phi)) * cos(deg2rad(theta))
+    look.y = eye.y + sin(deg2rad(phi))
+    look.z = eye.z + cos(deg2rad(phi)) * cos(90 - deg2rad(theta))
+
+    lastMouseX = x
+    lastMouseY = y
+    glutPostRedisplay()
+
+# Display callbacks
+def reshape(w, h):
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    gluPerspective(90, w/h, 1.0, 15.0)
+    glMatrixMode(GL_MODELVIEW)
+    glViewport(0, 0, w, h)
+
+    glutPostRedisplay()
+
+def display():
+    global modelsList
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+    glMatrixMode(GL_MODELVIEW)
+
+    glPushMatrix() #1
+    gluLookAt(eye.x, eye.y, eye.z, look.x, look.y, look.z, 0, 1, 0)
+    
+    print "eye at %f, %f, %f looking at %f, %f, %f\n" % ( eye.x, eye.y, eye.z, look.x, look.y, look.z)
+
+    pos_light()
+
+    glPushMatrix() #2
+    glTranslatef(0, -.5, 0)
+    Plane().draw()
+    for thing in modelsList:
+        thing.draw()
+
+    glPopMatrix() #2
+    #Axes().draw()
+
+    glPopMatrix() #1
+
+    glutSwapBuffers()
   
-  glutPostRedisplay();
-}
+# Snowmen
+for i in range(1,10):
+    modelsList.append(SnowMan(Vector3D(i*2 + 1, 1.0, i * 3)))
+# IceCream
+for i in range(-5 , 13):
+    modelsList.append(IceCream(Vector3D(i - 1, 1.0, -i)))
 
-void drawObjects() {
-  
-	// Snowmen
-	for (int i = -3; i < 10; i++) {
-		glPushMatrix(); {
-			glTranslatef(i*2 + 1, 1.0, i * 3 );
-			drawSnowMan();
-		} glPopMatrix();
-	}
-	// IceCream
-	for (int i = -5; i < 13; i++) {
-		glPushMatrix(); {
-			glTranslatef(i -1 , 1.0, -i);
-			drawIceCream();
-		} glPopMatrix();
-	}
+glutInit(sys.argv)
+glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
+glutInitWindowSize(300, 300); 
+glutInitWindowPosition(100, 100)
+glutCreateWindow("Program 4 in python")
+glClearColor(1.0, 1.0, 1.0, 1.0)
 
-}
+glutDisplayFunc( display )
+glutReshapeFunc( reshape )
+glutKeyboardFunc( keyboard )
+glutMouseFunc( mouse )
+glutMotionFunc( mouseMove )
 
-void display() {
+glEnable(GL_DEPTH_TEST)
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+init_lighting()
 
-	glMatrixMode(GL_MODELVIEW);
-
-	glPushMatrix(); {
-	//set up the camera
-	gluLookAt(eye.x, eye.y, eye.z, look.x, look.y, look.z, 0, 1, 0);
-	
-	printf("eye at %f, %f, %f looking at %f, %f, %f\n", eye.x, eye.y, eye.z, look.x, look.y, look.z);
-
-	pos_light();
-
-	glPushMatrix(); {
-		glTranslatef(0, -.5, 0);
-		drawPlane();
-		drawObjects();
-	} glPopMatrix();
-	//drawAxes();
-
-	} glPopMatrix();
-
-	glutSwapBuffers();
-
-}
-
-void mouse(int button, int state, int x, int y) {
-	if (button == GLUT_LEFT_BUTTON) {
-		if (state == GLUT_DOWN) { /* if the left button is clicked */
-			printf("left mouse clicked at %d %d\n", x, y);
-			lastMouseX = x;
-			lastMouseY = y;
-		}
-	}
-}
-
-#define ROTATE_SCALE .5
-void mouseMove(int x, int y) {
-	
-	theta -= ROTATE_SCALE * (lastMouseX - x);
-	phi += ROTATE_SCALE * (lastMouseY - y);
-	//printf("theta %f, phi %f\n", theta, phi);
-
-	if (phi > 50.0) { phi = 50.0; }
-	if (theta > 360.0) { theta -= 360.0; }
-	if (phi < -50.0) { phi = -50.0; }
-	if (theta < 0.0) { theta += 360.0; }
-
-	look.x = eye.x + cos(deg2rad(phi)) * cos(deg2rad(theta));
-	look.y = eye.y + sin(deg2rad(phi));
-	look.z = eye.z + cos(deg2rad(phi)) * cos(90 - deg2rad(theta));
-
-	lastMouseX = x;
-	lastMouseY = y;
-	glutPostRedisplay();
-}
-#undef ROTATE_SCALE
+glEnable(GL_NORMALIZE)
+glEnable(GL_LIGHTING)
+glutMainLoop()

@@ -3,8 +3,6 @@ Module level comment bwahahaha
 '''
 from math import sqrt
 
-__all__ = ["Vector3D"]
-
 class Vector3D():
     '''
     3D Vector reprentation class for CPE471
@@ -51,7 +49,7 @@ class Vector3D():
 
     def scaleToOne(self):
         if self.length() > 1.0:
-            normalize()
+            self.normalize()
 
     # operator overloads
     def __add__(self, other):

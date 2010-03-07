@@ -1,3 +1,11 @@
+How to Run:
+
+I had to install python-numpy in order to use glGet functions.  If you get
+errors about not able to create NULL pointers filled with values, install that
+(already installed on Vogon and lab machines)
+
+python plinko.py
+
 Controls:
 
 	wasd - Moves the camera

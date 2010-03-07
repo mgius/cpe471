@@ -55,12 +55,16 @@ class drawable():
     def __init__(self, position=Vector3D()):
         self.position=position
 
+    def translate(self):
+        glTranslate(self.position.x, self.position.y, self.position.z)
+
     def draw(self):
         raise NotImplementedError
     
 class IceCream(drawable):
     def draw(self):
         glPushMatrix() #1
+        self.translate()
         # Rotate the whole cone to be oriented in the negative X direction
         glRotatef(90, 1, 0, 0)
         setMaterial(materials['yellowflat'])
@@ -74,19 +78,23 @@ class IceCream(drawable):
 
 class SnowMan(drawable):
     def draw(self):
+        glPushMatrix() #1
+        self.translate()
         setMaterial(materials['blueflat'])
         glutSolidSphere(1, 10, 10)
-        glPushMatrix() #1
+        glPushMatrix() #2
         # Move it bottom sphere and middle sphere, minus a bit
         glTranslatef(0, 1.6, 0)
         setMaterial(materials['blackflat'])
         glutSolidSphere(.8, 10, 10)
 
-        glPushMatrix() #2
+        glPushMatrix() #3
         # Move it middle sphere and top sphere, minus a bit
         glTranslatef(0, 1.1, 0)
         setMaterial(materials['blueflat'])
         glutSolidSphere(.5, 10, 10)
+        glPopMatrix() #3
+
         glPopMatrix() #2
 
         glPopMatrix() #1
