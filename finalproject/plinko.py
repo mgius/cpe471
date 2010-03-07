@@ -2,7 +2,9 @@ from OpenGL.GLUT import *
 from OpenGL.GLU  import *
 from OpenGL.GL   import *
 
-from math import pi
+from models import *
+from util import *
+from Vector3D.Vector3D import *
 
 # Camera globals
 (eyeX, eyeY, eyeZ) = (0.0, 1.0, 3.0)
@@ -18,67 +20,18 @@ light_amb = [1.0, 1.0, 1.0, 1.0]
 light_diff = [0.6, 0.6, 0.6, 1.0]
 light_spec = [0.8, 0.8, 0.8, 1.0]
 
-def deg2rad(deg):
-   return pi * deg / 180.0
-
-def rad2deg(rad):
-   return rad * 180.0 / pi
-
-# materials of format dictionary, with values being a tuple of 4 lists  
-# the 4 lists are ambient, diffuse, specular and sininess in order
-
-materials = { 'redflat': ( 
-		[0.3, 0.0, 0.0, 1.0],
-		[0.9, 0.0, 0.0, 1.0],
-		[0.0, 0.0, 0.0, 1.0],
-		[0.0]
-	),
-	'greenshiny': (
-		[0.0, 0.3, 0.0, 1.0],
-		[0.0, 0.9, 0.0, 1.0],
-		[0.2, 1.0, 0.2, 1.0],
-		[8.0]
-	),
-	'blueflat': (
-		[0.0, 0.0, 0.5, 1.0],
-		[0.0, 0.0, 0.8, 1.0],
-		[0.2, 0.2, 1.0, 1.0],
-		[0.0]
-	),
-	'yellowflat': (
-		[0.9, 1.0, 0.5, 1.0],
-		[0.0, 0.0, 0.0, 1.0],
-		[0.2, 0.2, 0.0, 1.0],
-		[0.0]
-	),
-	'blackflat': (
-		[0.1, 0.1, 0.1, 1.0],
-		[0.1, 0.1, 0.1, 1.0],
-		[0.1, 0.1, 0.1, 1.0],
-		[0.0]
-	)
-}
-
-# Mouse movement
-(lastMouseX, lastMouseY) = (0,0)
-
-void drawAxes();
-void drawPlane();
 void init_lighting();
 void pos_light();
-void setMaterial(materialStruct);
 
 // forward declarations of functions I wrote
 void drawObjects();
 void display();
-void drawIceCream();
-void drawSnowMan();
 void reshape(int, int);
 void mouse(int,int,int,int);
 void mouseMove(int, int);
 
-
-
+# Mouse movement
+(lastMouseX, lastMouseY) = (0,0)
 #define SCALE_FACTOR .1
 void keyboard(unsigned char key, int x, int y) {
 	// 90% of keyboard input will be movement, and c++ complains about 
@@ -164,42 +117,6 @@ int main( int argc, char** argv ) {
 	glutMainLoop();
 }
 
-// My 3d models.  Hooray
-void drawIceCream() {
-   glPushMatrix(); {
-      // Rotate the whole cone to be oriented in the negative X direction
-      glRotatef(90, 1, 0, 0);
-		setMaterial(materials[MATERIAL_YELLOWFLAT]);
-      glutSolidCone(.5, 3, 10, 10);
-      glPushMatrix(); {
-         glTranslatef(0, 0, -.5);
-			setMaterial(materials[MATERIAL_GREENSHINY]);
-         glutSolidSphere(.6, 10, 10);
-      } glPopMatrix();
-   } glPopMatrix();
-}
-
-void drawSnowMan() {
-	setMaterial(materials[MATERIAL_BLUEFLAT]);
-   glutSolidSphere(1, 10, 10);
-   glPushMatrix(); {
-      // Move it bottom sphere and middle sphere, minus a bit
-      glTranslatef(0, 1.6, 0);
-		setMaterial(materials[MATERIAL_BLACKFLAT]);
-      glutSolidSphere(.8, 10, 10);
-
-      glPushMatrix(); {
-         // Move it middle sphere and top sphere, minus a bit
-         glTranslatef(0, 1.1, 0);
-			setMaterial(materials[MATERIAL_BLUEFLAT]);
-         glutSolidSphere(.5, 10, 10);
-      } glPopMatrix();
-
-   } glPopMatrix();
-
-}
-
-
 // Helper functions go down here.  That's right, I'm segregationist
 void init_lighting() {
 	//turn on light0
@@ -218,52 +135,6 @@ void pos_light() {
 	glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
 }
 
-void drawAxes() {
-   GLfloat oldWidth;
-   glGetFloatv(GL_LINE_WIDTH, &oldWidth);
-   glLineWidth(5.0);
-   // X axis
-   glBegin(GL_LINES); {
-      glColor3f(0.5, 0, 0);
-      glVertex3f(-50.0, 0, 0);
-      glVertex3f(50.0,0,0);
-   } glEnd();
-
-   // Y axis
-   glBegin(GL_LINES); {
-      glColor3f(0, 0.5, 0);
-      glVertex3f(0, -50.0, 0);
-      glVertex3f(0,50.0,0);
-   } glEnd();
-
-   // Z axis
-   glBegin(GL_LINES); {
-      glColor3f(0, 0, .5);
-      glVertex3f(0, 0, -50.0);
-      glVertex3f(0,0,50.0);
-   } glEnd();
-
-   glLineWidth(oldWidth);
-}
-
-void drawPlane() {
-	setMaterial(materials[MATERIAL_REDFLAT]);
-	glBegin(GL_QUADS); {
-		glVertex3f(-100.0, 0, -100.0);
-		glVertex3f(-100.0, 0,  100.0);
-		glVertex3f( 100.0, 0,  100.0);
-		glVertex3f( 100.0, 0, -100.0);
-	} glEnd();
-
-}
-
-
-void setMaterial(materialStruct material) {
-	glMaterialfv(GL_FRONT, GL_AMBIENT, material.ambient);
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, material.diffuse);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, material.specular);
-	glMaterialfv(GL_FRONT, GL_SHININESS, material.shininess);
-}
 
 void reshape(int w, int h) {
   glMatrixMode(GL_PROJECTION);
