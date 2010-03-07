@@ -5,6 +5,7 @@ Models for Plinko.
 from OpenGL.GLUT import *
 from OpenGL.GLU  import *
 from OpenGL.GL   import *
+from Vector3D.Vector3D import *
 
 ''' Any materials I might need in a dictionary '''
 materials = { 
@@ -42,26 +43,51 @@ materials = {
 
 def setMaterial(material):
 	ambient, diffuse, specular, shininess = material
-	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient)
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse)
-	glMaterialfv(GL_FRONT, GL_SPECULAR, specular)
-	glMaterialfv(GL_FRONT, GL_SHININESS, shininess)
+	glMaterial(GL_FRONT, GL_AMBIENT, ambient)
+	glMaterial(GL_FRONT, GL_DIFFUSE, diffuse)
+	glMaterial(GL_FRONT, GL_SPECULAR, specular)
+	glMaterial(GL_FRONT, GL_SHININESS, shininess)
 
 
 class drawable():
-def draw(self):
-raise NotImplementedError
 
+   # constructor
+	def __init__(position=Vector3D()):
+		self.position=position
+
+	def draw(self):
+		raise NotImplementedError
+	
 class IceCream(drawable):
 	def draw(self):
-		glPushMatrix()
+		glPushMatrix() #1
 		# Rotate the whole cone to be oriented in the negative X direction
 		glRotatef(90, 1, 0, 0)
-setMaterial(materials[MATERIAL_YELLOWFLAT])
-glutSolidCone(.5, 3, 10, 10)
-glPushMatrix()
-glTranslatef(0, 0, -.5)
-setMaterial(materials[MATERIAL_GREENSHINY])
-glutSolidSphere(.6, 10, 10)
-glPopMatrix()
-glPopMatrix()
+		setMaterial(materials['yellowflat'])
+		glutSolidCone(.5, 3, 10, 10)
+		glPushMatrix() #2
+		glTranslatef(0, 0, -.5)
+		setMaterial(materials['greenshiny'])
+		glutSolidSphere(.6, 10, 10)
+		glPopMatrix() #2
+		glPopMatrix() #1
+
+class SnowMan(drawable):
+	def draw(self):
+		setMaterial(materials['blueflat'])
+		glutSolidSphere(1, 10, 10)
+		glPushMatrix() #1
+		# Move it bottom sphere and middle sphere, minus a bit
+		glTranslatef(0, 1.6, 0)
+		setMaterial(materials['blackflat']);
+		glutSolidSphere(.8, 10, 10)
+
+		glPushMatrix() #2
+		# Move it middle sphere and top sphere, minus a bit
+		glTranslatef(0, 1.1, 0)
+		setMaterial(materials['blueflat'])
+		glutSolidSphere(.5, 10, 10)
+		glPopMatrix() #2
+
+		glPopMatrix() #1
+
