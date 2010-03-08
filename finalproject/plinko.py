@@ -148,7 +148,6 @@ def display():
     glTranslatef(0, -.5, 0)
     #Plane().draw()
     for thing in modelsList:
-        thing.gravity()
         thing.draw()
 
     glPopMatrix() #2
@@ -168,6 +167,9 @@ def display():
 modelsList.append(PlinkoDisc())
 
 def timer(data):
+    for thing in modelsList:
+        if not thing.grabbed:
+            thing.gravity()
     glutTimerFunc(50, timer, 0)
     glutPostRedisplay()
 

@@ -71,9 +71,14 @@ class drawable():
 
     def draw(self):
         raise NotImplementedError
+
     def gravity(self):
         ''' Emulates the effects of gravity on the object '''
         return None
+
+    def clicked(self, worldX, worldY):
+        ''' True if the world coordinates "click" this object. '''
+        return False
 
 class IceCream(drawable):
     def draw(self):
@@ -185,6 +190,15 @@ class PlinkoDisc(drawable):
         self.velocity /= 2
         self.position += self.velocity
         print "Disc new position %s" % str(self.position)
+
+    def grabbed(self, worldX, worldY):
+        distance = self.position - Vector3D(worldX, worldY, 0)
+        distance.z = 0
+        if distance.length() < self.radius:
+            return True
+        else:
+            return False
+
         
 
 
