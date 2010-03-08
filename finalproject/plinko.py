@@ -146,8 +146,9 @@ def display():
 
     glPushMatrix() #2
     glTranslatef(0, -.5, 0)
-    Plane().draw()
+    #Plane().draw()
     for thing in modelsList:
+        thing.gravity()
         thing.draw()
 
     glPopMatrix() #2
@@ -158,14 +159,17 @@ def display():
     glutSwapBuffers()
   
 # Snowmen
-for i in range(1,10):
-    modelsList.append(SnowMan(Vector3D(i*2 + 1, 1.0, i * 3)))
-# IceCream
-for i in range(-5 , 13):
-    modelsList.append(IceCream(Vector3D(i - 1, 1.0, -i)))
+#for i in range(1,10):
+#    modelsList.append(SnowMan(Vector3D(i*2 + 1, 1.0, i * 3)))
+## IceCream
+#for i in range(-5 , 13):
+#    modelsList.append(IceCream(Vector3D(i - 1, 1.0, -i)))
 
-#modelsList.append(PlinkoDisc())
+modelsList.append(PlinkoDisc())
 
+def timer(data):
+    glutTimerFunc(50, timer, 0)
+    glutPostRedisplay()
 
 glutInit(sys.argv)
 glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
@@ -186,4 +190,6 @@ init_lighting()
 
 glEnable(GL_NORMALIZE)
 glEnable(GL_LIGHTING)
+
+glutTimerFunc(100, timer, 0)
 glutMainLoop()

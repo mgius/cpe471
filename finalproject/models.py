@@ -60,7 +60,9 @@ class drawable():
     The draw() function will draw assuming it is at 0,0,0, but you
     are welcome to translate before calling draw if you'd like.
     '''
-   # constructor
+    grabbed = False
+
+    #constructor
     def __init__(self, position=Vector3D()):
         self.position=position
 
@@ -69,6 +71,9 @@ class drawable():
 
     def draw(self):
         raise NotImplementedError
+    def gravity(self):
+        ''' Emulates the effects of gravity on the object '''
+        return None
 
 class IceCream(drawable):
     def draw(self):
@@ -164,15 +169,23 @@ class PlinkoDisc(drawable):
     should eventually be a red disc with a dollar sign on it
     '''
     radius = .5
-    height = .2
+    height = .1
     slices = 20
     stacks = 20
+    velocity = Vector3D()
     def draw(self):
         glPushMatrix() #1
         self.translate()
-        setMaterial(materials['yellowflat'])
+        setMaterial(materials['redflat'])
         glutSolidCylinder(self.radius, self.height, self.slices, self.stacks)
         glPopMatrix() #1
+
+    def gravity(self):
+        self.velocity += Vector3D(0, -.05, 0)
+        self.velocity /= 2
+        self.position += self.velocity
+        print "Disc new position %s" % str(self.position)
+        
 
 
 class Peg(drawable):

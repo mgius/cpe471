@@ -79,6 +79,15 @@ class Vector3D():
         self.z *= mult
         return self
 
+    def __div__(self, mult):
+        return Vector3D(self.x / mult, self.y / mult, self.z / mult)
+
+    def __idiv(self, mult):
+        self.x /= mult
+        self.y /= mult
+        self.z /= mult
+        return self
+
     def __eq__(self, other):
         if self.x == other.x and \
            self.y == other.y and \
