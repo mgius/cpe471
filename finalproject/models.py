@@ -67,7 +67,16 @@ class drawable():
         self.position=position
 
     def translate(self):
+        '''
+        Applies the openGL translate that puts this object into the right place
+        '''
         glTranslate(self.position.x, self.position.y, self.position.z)
+
+    def move(self, vector):
+        '''
+        Moves this object by the amount specified in the passed vector
+        '''
+        self.position += vector
 
     def draw(self):
         raise NotImplementedError
@@ -77,10 +86,22 @@ class drawable():
         return None
 
     def contains(self, worldX, worldY):
-        ''' True if the world coordinates are "contained" this object. 
-        AKA, has thing thing been clicked
+        ''' 
+        True if the world coordinates are "contained" this object. 
+        AKA, has this thing been clicked
         '''
         return False
+    def grab(self):
+        '''
+        "Grabs" this object
+        '''
+        pass
+    def release(self):
+        '''
+        "releases" this object
+        '''
+        pass
+
 
 class IceCream(drawable):
     def draw(self):
@@ -188,19 +209,24 @@ class PlinkoDisc(drawable):
         glPopMatrix() #1
 
     def gravity(self):
-        self.velocity += Vector3D(0, -.05, 0)
-        self.velocity /= 2
-        self.position += self.velocity
-        print "Disc new position %s" % str(self.position)
+        if self.grabbed == False:
+            self.velocity += Vector3D(0, -.05, 0)
+            self.velocity /= 2
+            self.position += self.velocity
+            print "Disc new position %s" % str(self.position)
 
-    def grabbed(self, worldX, worldY):
+    def contains(self, worldX, worldY):
         distance = self.position - Vector3D(worldX, worldY, 0)
         distance.z = 0
         if distance.length() < self.radius:
             return True
         else:
             return False
+    def grab(self):
+        self.grabbed = True
 
+    def release(self):
+        self.grabbed = False
         
 
 

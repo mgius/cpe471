@@ -108,15 +108,28 @@ def plinkoMouse(button, state, x, y):
             print "left mouse clicked at %d %d\n" % (x, y)
             for thing in modelsList:
                 if thing.contains(p2w_x(x, GH, GW), \
-                                  p2w_y(y, GH, GW):
-                    thing.grabbed = True
+                                  p2w_y(y, GH, GW)):
+                    thing.grab()
                     grabbed = thing
                     lastMouseX = x
                     lastMouseY = y
         if state == GLUT_UP:
             print "mouse released\n"
-            grabbed.grabbed = False
-            grabbed = False
+            if grabbed != None:
+                grabbed.release()
+                grabbed = None
+
+def plinkoMouseMove(x, y):
+    '''
+    Mouse movement for handling moving the plinko chips
+    '''
+    global lastMouseX, lastMouseY, grabbed, GW, GH
+    if grabbed != None:
+        xMove = p2w_x(lastMouseX, GH, GW) - p2w_x(x, GH, GW)
+        yMove = p2w_y(lastMouseY, GH, GW) - p2w_y(y, GH, GW)
+        grabbed.move(Vector3D(-xMove, -yMove, 0))
+        lastMouseX = x
+        lastMouseY = y
 
 def cameraMouse(button, state, x, y):
     ''' 
@@ -158,6 +171,8 @@ def cameraMouseMove(x, y):
 
 # Display callbacks
 def reshape(w, h):
+    GW = w
+    GH = h
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     gluPerspective(90, w/h, 1.0, 15.0)
@@ -218,8 +233,8 @@ glClearColor(1.0, 1.0, 1.0, 1.0)
 glutDisplayFunc( display )
 glutReshapeFunc( reshape )
 glutKeyboardFunc( keyboard )
-glutMouseFunc( cameraMouse )
-glutMotionFunc( cameraMouseMove )
+glutMouseFunc( plinkoMouse )
+glutMotionFunc( plinkoMouseMove )
 
 glEnable(GL_DEPTH_TEST)
 
