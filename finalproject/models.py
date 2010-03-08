@@ -76,8 +76,10 @@ class drawable():
         ''' Emulates the effects of gravity on the object '''
         return None
 
-    def clicked(self, worldX, worldY):
-        ''' True if the world coordinates "click" this object. '''
+    def contains(self, worldX, worldY):
+        ''' True if the world coordinates are "contained" this object. 
+        AKA, has thing thing been clicked
+        '''
         return False
 
 class IceCream(drawable):

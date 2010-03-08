@@ -10,6 +10,10 @@ from math import sin,cos
 
 import sys
 
+# window size globals (for p2w_x, p2w_y)
+GW = 300
+GH = 300
+
 # models list
 
 modelsList = []
@@ -93,7 +97,33 @@ def keyboard(key, x, y):
 
     glutPostRedisplay()
 
-def mouse(button, state, x, y):
+grabbed = None
+def plinkoMouse(button, state, x, y):
+    '''
+    Initial mouse click for plinko chip manipulation
+    '''
+    global lastMouseX, lastMouseY, modelsList, GW, GH, grabbed
+    if button == GLUT_LEFT_BUTTON:
+        if state == GLUT_DOWN:
+            print "left mouse clicked at %d %d\n" % (x, y)
+            for thing in modelsList:
+                if thing.contains(p2w_x(x, GH, GW), \
+                                  p2w_y(y, GH, GW):
+                    thing.grabbed = True
+                    grabbed = thing
+                    lastMouseX = x
+                    lastMouseY = y
+        if state == GLUT_UP:
+            print "mouse released\n"
+            grabbed.grabbed = False
+            grabbed = False
+
+def cameraMouse(button, state, x, y):
+    ''' 
+    Initial mouse click for camera manipulation.
+
+    Mainly kept for historical purposes and testing
+    '''
     global lastMouseX, lastMouseY
     if button == GLUT_LEFT_BUTTON:
         if state == GLUT_DOWN:
@@ -101,7 +131,12 @@ def mouse(button, state, x, y):
             lastMouseX = x
             lastMouseY = y
 
-def mouseMove(x, y):
+def cameraMouseMove(x, y):
+    '''
+    Mouse movement handling for camera manipulation.
+
+    Mainly kept for historical purposes and testing
+    '''
     global theta, phi, look, lastMouseX, lastMouseY
     rotate_scale = .5
 
@@ -183,8 +218,8 @@ glClearColor(1.0, 1.0, 1.0, 1.0)
 glutDisplayFunc( display )
 glutReshapeFunc( reshape )
 glutKeyboardFunc( keyboard )
-glutMouseFunc( mouse )
-glutMotionFunc( mouseMove )
+glutMouseFunc( cameraMouse )
+glutMotionFunc( cameraMouseMove )
 
 glEnable(GL_DEPTH_TEST)
 
