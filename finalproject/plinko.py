@@ -80,9 +80,6 @@ def keyboard(key, x, y):
 
     elif key == 'r' or key == 'R':
         glMatrixMode(GL_MODELVIEW)
-        glPushMatrix()
-        glLoadIdentity()
-        glPopMatrix()
         eye.set(0.0, 1.0, 3.0)
         look.set(0.0, 0.0, 0.0)
         phi = 0.0
@@ -98,6 +95,55 @@ def keyboard(key, x, y):
     glutPostRedisplay()
 
 grabbed = None
+
+def doPicking(x, y):
+    '''
+    Determine which objects are in this clicking region
+    '''
+    global eye, look, GW, GH
+    # get values on the size of the viewport
+    viewport = glGetInteger(GL_VIEWPORT)
+    # allocate a select buffer long enough to hold 
+    glSelectBuffer(len(modelsList) + 3)
+    glRenderMode(GL_SELECT)
+    glInitNames()
+    # load a junk name
+    glPushName(0xfffffff)
+
+    glMatrixMode(GL_PROJECTION)
+    glPushMatrix() #1
+    
+    # set up projection zoomed in near the mouse
+    glLoadIdentity()
+    gluPickMatrix(x, viewport[3]-y, 1,1,viewport)
+    gluPerspective(90, GW/GH, 1.0, 15.0)
+
+    # draw all the objects
+    glMatrixMode(GL_MODELVIEW)
+    glPushMatrix() #2
+
+    gluLookAt(eye.x, eye.y, eye.z, look.x, look.y, look.z, 0, 1, 0)
+    drawObjects()
+
+    glPopMatrix() #2
+
+    glMatrixMode(GL_PROJECTION)
+    glPopMatrix() #1
+
+    glMatrixMode(GL_MODELVIEW)
+    glFlush()
+
+    # restore original projection matrix
+
+    buffer = glRenderMode(GL_RENDER)
+    print "Number of hits %d\n" % len(buffer)
+
+    for hit_record in buffer:
+        min_depth, max_depth, names = hit_record
+        print "names:\n" 
+        for name in names:
+            print "%s\n" % name
+
 def plinkoMouse(button, state, x, y):
     '''
     Initial mouse click for plinko chip manipulation
@@ -113,6 +159,7 @@ def plinkoMouse(button, state, x, y):
                     grabbed = thing
                     lastMouseX = x
                     lastMouseY = y
+            doPicking(x,y)
         if state == GLUT_UP:
             print "mouse released\n"
             if grabbed != None:
@@ -181,8 +228,20 @@ def reshape(w, h):
 
     glutPostRedisplay()
 
-def display():
+def drawObjects():
+    ''' 
+    Draw all "clickable" objects
+    '''
     global modelsList
+    glPushMatrix()
+    name = 0
+    for thing in modelsList:
+        glLoadName(name)
+        name += 1
+        thing.draw()
+    glPopMatrix()
+
+def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     glMatrixMode(GL_MODELVIEW)
@@ -197,12 +256,10 @@ def display():
     glPushMatrix() #2
     glTranslatef(0, -.5, 0)
     #Plane().draw()
-    for thing in modelsList:
-        thing.draw()
-
     glPopMatrix() #2
     #Axes().draw()
 
+    drawObjects()
     glPopMatrix() #1
 
     glutSwapBuffers()
