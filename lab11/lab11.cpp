@@ -31,10 +31,12 @@ typedef struct Vector3 {
     float x;
     float y;
     float z;
+	 Vector3(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {}
     Vector3() : x(0), y(0), z(0) {}
 } Vector3;
 
 Vector3 eye, la;
+Vector3 cylPos(-2,0,-2), conePos(0,0,0);
 
 GLUquadricObj  *b; /* pointer to quadric object */
 GLUquadricObj  *t; /* pointer to quadric object */
@@ -174,14 +176,23 @@ void processHits(GLint hits, GLuint buffer[])
   //go through the hit list and print the names of the objects hit
   for (i = 0; i < hits; i++) {	
     names = *ptr;  
-    //advance the pointer to the 4th element in the array (because we are in 2d no zmin/zmax)
+    //advance the pointer to the 4th element in the array 
+	 //(because we are in 2d no zmin/zmax (rather, zmin/zmax aren't relevant?))
     ptr = ptr+3;
     printf("the name of the object(s) hit: ");
     for (j = 0; j <names; j++) {
       printf("%d ", *ptr); 
       //add code here to modify an object if its name matches a hit
       //... for example:  if (*ptr == TREE_TOP) modify the trees color
-
+		if (*ptr == CONE) {
+			// do something with the cone
+			conePos.y += .5;
+		}
+		else if (*ptr == CYL) {
+			// do something with the CYL
+			cylPos.z += .5;
+		}
+		
       //advance the pointer to next element in the array
       ptr++;
     }
@@ -191,7 +202,7 @@ void processHits(GLint hits, GLuint buffer[])
 
 void cyl() {
   glPushMatrix();
-    glTranslatef(-2,0,-2);
+    glTranslatef(cylPos.x, cylPos.y, cylPos.z);
     /* rotate cylinder to align with y axis */
     glRotatef(-90.0, 1.0, 0.0, 0.0);
     materials(brownMaterials);
@@ -206,6 +217,7 @@ void cone(){
   materials(DarkPMaterials);
   glPushMatrix();
     /* rotate cylinder to align with y axis */
+    glTranslatef(conePos.x, conePos.y, conePos.z);
     glRotatef(-90.0, 1.0, 0.0, 0.0);
     gluCylinder(t, 2.5,  0, CONE_HEIGHT, 20, 10);
   glPopMatrix();
@@ -214,7 +226,8 @@ void cone(){
 void draw_objs() {
   glPushMatrix();
     glScalef(0.3, 0.3, 0.3);
-    //put the cylinders name on the stack
+    //put the cylinders name on the stack, this call has no effect unless in 
+	 //select mode
     glLoadName(CYL);
     cyl();
     //now put the cone's name on the stack
