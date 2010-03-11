@@ -54,7 +54,7 @@ def pos_light():
 (lastMouseX, lastMouseY) = (0,0)
 
 def keyboard(key, x, y):
-    global look, eye, phi, theta
+    global look, eye, phi, theta, modelsList
     scale_factor = .1
     
     zoom = look - eye
@@ -84,6 +84,8 @@ def keyboard(key, x, y):
         look.set(0.0, 0.0, 0.0)
         phi = 0.0
         theta = 272.0
+        modelsList = []
+        modelsList.append(PlinkoDisc())
         glutPostRedisplay()
     elif key == 'q' or key == 'Q':
         exit(0)
@@ -100,7 +102,7 @@ def doPicking(x, y):
     '''
     Determine which objects are in this clicking region
     '''
-    global eye, look, GW, GH
+    global eye, look, GW, GH, modelsList, grabbed
     # get values on the size of the viewport
     viewport = glGetInteger(GL_VIEWPORT)
     # allocate a select buffer long enough to hold 
@@ -116,7 +118,7 @@ def doPicking(x, y):
     # set up projection zoomed in near the mouse
     glLoadIdentity()
     gluPickMatrix(x, viewport[3]-y, 1,1,viewport)
-    gluPerspective(90, GW/GH, 1.0, 15.0)
+    gluPerspective(90, float(GW)/float(GH), 1.0, 15.0)
 
     # draw all the objects
     glMatrixMode(GL_MODELVIEW)
@@ -142,7 +144,9 @@ def doPicking(x, y):
         min_depth, max_depth, names = hit_record
         print "names:\n" 
         for name in names:
-            print "%s\n" % name
+            print "grabbing something\n"
+            modelsList[name].grab()
+            grabbed = modelsList[name]
 
 def plinkoMouse(button, state, x, y):
     '''
@@ -152,13 +156,13 @@ def plinkoMouse(button, state, x, y):
     if button == GLUT_LEFT_BUTTON:
         if state == GLUT_DOWN:
             print "left mouse clicked at %d %d\n" % (x, y)
-            for thing in modelsList:
-                if thing.contains(p2w_x(x, GH, GW), \
-                                  p2w_y(y, GH, GW)):
-                    thing.grab()
-                    grabbed = thing
-                    lastMouseX = x
-                    lastMouseY = y
+            #for thing in modelsList:
+            #    if thing.contains(p2w_x(x, GH, GW), \
+            #                      p2w_y(y, GH, GW)):
+            #        thing.grab()
+            #        grabbed = thing
+            lastMouseX = x
+            lastMouseY = y
             doPicking(x,y)
         if state == GLUT_UP:
             print "mouse released\n"
@@ -174,7 +178,10 @@ def plinkoMouseMove(x, y):
     if grabbed != None:
         xMove = p2w_x(lastMouseX, GH, GW) - p2w_x(x, GH, GW)
         yMove = p2w_y(lastMouseY, GH, GW) - p2w_y(y, GH, GW)
-        grabbed.move(Vector3D(-xMove, -yMove, 0))
+        back = 15.0
+        front = 1.0
+        zFactor = (back - grabbed.position.z) / (back - front)
+        grabbed.move(Vector3D(-xMove * zFactor , -yMove * zFactor, 0))
         lastMouseX = x
         lastMouseY = y
 
@@ -218,11 +225,12 @@ def cameraMouseMove(x, y):
 
 # Display callbacks
 def reshape(w, h):
+    global GW, GH
     GW = w
     GH = h
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    gluPerspective(90, w/h, 1.0, 15.0)
+    gluPerspective(90, float(w)/float(h), 1.0, 15.0)
     glMatrixMode(GL_MODELVIEW)
     glViewport(0, 0, w, h)
 
@@ -249,7 +257,7 @@ def display():
     glPushMatrix() #1
     gluLookAt(eye.x, eye.y, eye.z, look.x, look.y, look.z, 0, 1, 0)
     
-    print "eye at %f, %f, %f looking at %f, %f, %f\n" % ( eye.x, eye.y, eye.z, look.x, look.y, look.z)
+    # print "eye at %f, %f, %f looking at %f, %f, %f\n" % ( eye.x, eye.y, eye.z, look.x, look.y, look.z)
 
     pos_light()
 
@@ -275,8 +283,7 @@ modelsList.append(PlinkoDisc())
 
 def timer(data):
     for thing in modelsList:
-        if not thing.grabbed:
-            thing.gravity()
+        thing.gravity()
     glutTimerFunc(50, timer, 0)
     glutPostRedisplay()
 
