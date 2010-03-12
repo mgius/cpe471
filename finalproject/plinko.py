@@ -22,12 +22,12 @@ GH = 300
 # models list
 
 modelsList = []
-pegList = []
+obstacleList = []
 discList = []
 
 # Camera globals
-eye = Vector3D(0.0, 1.0, 3.0)
-look = Vector3D(0.0, 1.0, 2.0)
+eye = Vector3D(0.0, 1.0, 10.0)
+look = Vector3D(0.0, 1.0, 9.0)
 up = Vector3D(0.0, 1.0, 0.0)
 
 phi = 0.0
@@ -61,7 +61,7 @@ def pos_light():
 (lastMouseX, lastMouseY) = (0,0)
 
 def keyboard(key, x, y):
-    global look, eye, phi, theta, modelsList, discList, pegList
+    global look, eye, phi, theta, modelsList, discList, obstacleList
     scale_factor = .1
     
     zoom = look - eye
@@ -87,12 +87,12 @@ def keyboard(key, x, y):
 
     elif key == 'r' or key == 'R':
         glMatrixMode(GL_MODELVIEW)
-        eye.set(0.0, 1.0, 3.0)
-        look.set(0.0, 1.0, 2.0)
+        eye.set(0.0, 1.0, 10.0)
+        look.set(0.0, 1.0, 9.0)
         phi = 0.0
         theta = 272.0
         modelsList = []
-        pegList = []
+        obstacleList = []
         discList = []
         initializeObjects()
         glutPostRedisplay()
@@ -284,24 +284,25 @@ def display():
     glutSwapBuffers()
   
 def initializeObjects():
-    global modelsList, discList, pegList
-    #disc = PlinkoDisc(position=Vector3D(0,2,0))
-    #modelsList.append(disc)
-    #discList.append(disc)
+    global modelsList, discList, obstacleList
+    disc = PlinkoDisc(position=Vector3D(0,6,0))
+    modelsList.append(disc)
+    discList.append(disc)
 
     #for x in range(10):
     #    peg = Peg(position=Vector3D(random.uniform(-3,3), random.uniform(-3,1), 0))
     #    modelsList.append(peg)
-    #    pegList.append(peg)
+    #    obstacleList.append(peg)
     board = PlinkoBoard()
-    pegList.extend(board.getPegs())
+    obstacleList.extend(board.getPegs())
     modelsList.append(board)
+
 
 
 def timer(data):
     if not reset:
         for disc in discList:
-            disc.gravity(pegList)
+            disc.gravity(obstacleList)
     glutTimerFunc(100, timer, 0)
     glutPostRedisplay()
 

@@ -7,7 +7,8 @@ from OpenGL.GLU  import *
 from OpenGL.GL   import *
 from Vector3D.Vector3D import *
 
-from numpy import arange
+from math import fabs
+import random
 
 # Any materials I might need in a dictionary
 materials = { 
@@ -198,7 +199,7 @@ class PlinkoDisc(drawable):
 
     should eventually be a red disc with a dollar sign on it
     '''
-    radius = .5
+    radius = .20
     height = .1
     slices = 20
     stacks = 20
@@ -211,13 +212,16 @@ class PlinkoDisc(drawable):
         glPopMatrix() #1
 
     def gravity(self, obstacles):
-        ping = False
         if not self.grabbed:
             for obstacle in obstacles:
                 if self.contact(obstacle):
-                    ping = True
                     #self.position -= self.velocity
                     diffVector = self.position - obstacle.position
+                    if diffVector.x == 0:
+                        if random.choice((True, False)):
+                            diffVector.x = .05
+                        else:
+                            diffVector.x = -.05
                     # bounces should slow it down a bit
                     self.velocity += diffVector
                     self.velocity.normalize(.09)
@@ -268,31 +272,71 @@ class Peg(drawable):
         glutSolidCylinder(self.radius, self.height, self.slices, self.stacks)
         glPopMatrix() #1
 
+class Wall(drawable):
+    '''
+    Wall of the gameboard.
+    '''
+    def __init__(self, position=Vector3D(), width=.5, height=10, depth=.5):
+        self.position=position
+        self.width = width
+        self.height = height
+        self.depth = depth
+
+    def draw(self):
+        glPushMatrix() #1
+        self.translate()
+        print "%s" % str(self.position)
+        glScalef(self.width, self.height, self.depth)
+        glutSolidCube(1)
+        glPopMatrix() #1
+
+
 class PlinkoBoard(drawable):
     '''
-    The gameboard.  Generates its own pattern of pegs if not provided 
+    The gameboard.  Generates its own pattern of pegs and walls if not provided
     with one.
     '''
-    def __init__(self, position=Vector3D(), pegs=None):
+    def __init__(self, position=Vector3D(), pegs=None, walls =None, \
+                 bottom = -5, top = 5, left = -3, right = 3):
         self.position=position
+
+        self.bottom = bottom
+        self.top = top
+        self.left = left
+        self.right = right
+
         if pegs == None:
             self.generatePegs()
         else:
             self.pegs = pegs
 
+        if walls == None:
+            self.generateWalls()
+        else:
+            self.walls = walls
+
+
+
+    def generateWalls(self):
+        height = fabs(self.bottom) + fabs(self.top)
+        middle = (self.bottom + self.top) / 2
+
+        leftPos = Vector3D(self.left - 1, middle, 0)
+        rightPos = Vector3D(self.right + 1, middle, 0)
+
+        leftWall = Wall(height=height, position=leftPos)
+        rightWall = Wall(height=height, position=rightPos)
+
+        self.walls = [leftWall, rightWall]
 
     def generatePegs(self):
         self.pegs = []
-        bottom = -5
-        top = 5
-        left = -5.0
-        right = 5.0
-        for row in range(bottom, top, 1):
+        for row in range(self.bottom, self.top):
             if row % 2 == 0:
-                for col in arange(left - .25, right + .25, .5):
-                    self.pegs.append(Peg(position=Vector3D(col, row, 0)))
+                for col in range(self.left - 1, self.right):
+                    self.pegs.append(Peg(position=Vector3D(col + .5, row, 0)))
             else:
-                 for col in arange(left, right, .5):
+                 for col in range(self.left, self.right):
                     self.pegs.append(Peg(position=Vector3D(col, row, 0)))
 
 
@@ -301,6 +345,11 @@ class PlinkoBoard(drawable):
         # draw the pegs
         for peg in self.pegs:
             peg.draw()
+        for wall in self.walls:
+            wall.draw()
 
     def getPegs(self):
         return self.pegs
+
+    def getWalls(self):
+        return self.walls
