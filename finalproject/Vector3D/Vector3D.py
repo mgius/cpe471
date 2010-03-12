@@ -43,6 +43,10 @@ class Vector3D():
 
     def normalize(self, scale = 1.0):
         len = self.length()
+        if len == 0:
+            return
+        if scale == 0:
+            scale = 0.0001 
         self.x /= (len / scale)
         self.y /= (len / scale)
         self.z /= (len / scale)
@@ -102,5 +106,5 @@ class Vector3D():
         return not self == oth
 
     def __str__(self):
-        return "Vector3D at (%f,%f,%f) with components (%f,%f, %f)" % \
-            (self.xPos, self.yPos, self.zPos, self.x, self.y, self.z)
+        return "(%f, %f, %f)" % \
+            (self.x, self.y, self.z)

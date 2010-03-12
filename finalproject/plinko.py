@@ -8,7 +8,12 @@ from Vector3D.Vector3D import *
 
 from math import sin,cos
 
+import random
+
 import sys
+
+# gotta be a better way of doing this
+reset = False
 
 # window size globals (for p2w_x, p2w_y)
 GW = 300
@@ -17,6 +22,8 @@ GH = 300
 # models list
 
 modelsList = []
+pegList = []
+discList = []
 
 # Camera globals
 eye = Vector3D(0.0, 1.0, 3.0)
@@ -54,7 +61,7 @@ def pos_light():
 (lastMouseX, lastMouseY) = (0,0)
 
 def keyboard(key, x, y):
-    global look, eye, phi, theta, modelsList
+    global look, eye, phi, theta, modelsList, discList, pegList
     scale_factor = .1
     
     zoom = look - eye
@@ -81,12 +88,15 @@ def keyboard(key, x, y):
     elif key == 'r' or key == 'R':
         glMatrixMode(GL_MODELVIEW)
         eye.set(0.0, 1.0, 3.0)
-        look.set(0.0, 0.0, 0.0)
+        look.set(0.0, 1.0, 2.0)
         phi = 0.0
         theta = 272.0
         modelsList = []
-        modelsList.append(PlinkoDisc())
+        pegList = []
+        discList = []
+        initializeObjects()
         glutPostRedisplay()
+
     elif key == 'q' or key == 'Q':
         exit(0)
 
@@ -145,8 +155,8 @@ def doPicking(x, y):
         print "names:\n" 
         for name in names:
             print "grabbing something\n"
-            modelsList[name].grab()
-            grabbed = modelsList[name]
+            if modelsList[name].grab():
+                grabbed = modelsList[name]
 
 def plinkoMouse(button, state, x, y):
     '''
@@ -184,6 +194,7 @@ def plinkoMouseMove(x, y):
         grabbed.move(Vector3D(-xMove * zFactor , -yMove * zFactor, 0))
         lastMouseX = x
         lastMouseY = y
+        glutPostRedisplay()
 
 def cameraMouse(button, state, x, y):
     ''' 
@@ -272,19 +283,23 @@ def display():
 
     glutSwapBuffers()
   
-# Snowmen
-#for i in range(1,10):
-#    modelsList.append(SnowMan(Vector3D(i*2 + 1, 1.0, i * 3)))
-## IceCream
-#for i in range(-5 , 13):
-#    modelsList.append(IceCream(Vector3D(i - 1, 1.0, -i)))
+def initializeObjects():
+    global modelsList, discList, pegList
+    disc = PlinkoDisc(position=Vector3D(0,2,0))
+    modelsList.append(disc)
+    discList.append(disc)
 
-modelsList.append(PlinkoDisc())
+    for x in range(10):
+        peg = Peg(position=Vector3D(random.uniform(-3,3), random.uniform(-3,1), 0))
+        modelsList.append(peg)
+        pegList.append(peg)
+
 
 def timer(data):
-    for thing in modelsList:
-        thing.gravity()
-    glutTimerFunc(50, timer, 0)
+    if not reset:
+        for disc in discList:
+            disc.gravity(pegList)
+    glutTimerFunc(100, timer, 0)
     glutPostRedisplay()
 
 glutInit(sys.argv)
@@ -307,5 +322,6 @@ init_lighting()
 glEnable(GL_NORMALIZE)
 glEnable(GL_LIGHTING)
 
+initializeObjects()
 glutTimerFunc(100, timer, 0)
 glutMainLoop()

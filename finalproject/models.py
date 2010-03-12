@@ -81,7 +81,7 @@ class drawable():
     def draw(self):
         raise NotImplementedError
 
-    def gravity(self):
+    def gravity(self, obstacles):
         ''' Emulates the effects of gravity on the object '''
         return None
 
@@ -95,12 +95,12 @@ class drawable():
         '''
         "Grabs" this object
         '''
-        pass
+        return False
     def release(self):
         '''
         "releases" this object
         '''
-        pass
+        return False
 
 
 class IceCream(drawable):
@@ -208,12 +208,22 @@ class PlinkoDisc(drawable):
         glutSolidCylinder(self.radius, self.height, self.slices, self.stacks)
         glPopMatrix() #1
 
-    def gravity(self):
-        if self.grabbed == False:
+    def gravity(self, obstacles):
+        ping = False
+        if not self.grabbed:
+            for obstacle in obstacles:
+                if self.contact(obstacle):
+                    ping = True
+                    #self.position -= self.velocity
+                    diffVector = self.position - obstacle.position
+                    # bounces should slow it down a bit
+                    self.velocity += diffVector
+                    self.velocity.normalize(.09)
+                    
             self.velocity += Vector3D(0, -.05, 0)
-            self.velocity /= 2
+            self.velocity.normalize(.10)
             self.position += self.velocity
-            print "Disc new position %s" % str(self.position)
+            #print "Disc new position %s" % str(self.position)
 
     def contains(self, worldX, worldY):
         distance = self.position - Vector3D(worldX, worldY, 0)
@@ -224,9 +234,20 @@ class PlinkoDisc(drawable):
             return False
     def grab(self):
         self.grabbed = True
+        return True
 
     def release(self):
         self.grabbed = False
+
+    def contact(self, obstacle):
+        '''
+        Determines if this PlinkoDisc is in contact with that obstacle
+        '''
+        distance = self.position - obstacle.position
+        if distance.length() < self.radius + obstacle.radius:
+            return True
+        else:
+            return False
         
 
 
@@ -234,8 +255,16 @@ class Peg(drawable):
     '''
     Peg object.  The position of the peg should be relative to the board
     '''
+    radius = .05
+    height = .1
+    slices = 20
+    stacks = 20
     def draw(self):
-        pass
+        glPushMatrix() #1
+        self.translate()
+        setMaterial(materials['blueflat'])
+        glutSolidCylinder(self.radius, self.height, self.slices, self.stacks)
+        glPopMatrix() #1
 
 class PlinkoBoard(drawable):
     '''
