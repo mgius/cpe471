@@ -213,21 +213,13 @@ class PlinkoDisc(drawable):
 
     def gravity(self, obstacles):
         if not self.grabbed:
+            speed = .10
             for obstacle in obstacles:
-                if self.contact(obstacle):
-                    #self.position -= self.velocity
-                    diffVector = self.position - obstacle.position
-                    if diffVector.x == 0:
-                        if random.choice((True, False)):
-                            diffVector.x = .05
-                        else:
-                            diffVector.x = -.05
-                    # bounces should slow it down a bit
-                    self.velocity += diffVector
-                    self.velocity.normalize(.09)
-                    
+                if obstacle.contact(self):
+                    speed = obstacle.collide(self, speed)
+
             self.velocity += Vector3D(0, -.05, 0)
-            self.velocity.normalize(.10)
+            self.velocity.normalize(speed)
             self.position += self.velocity
             #print "Disc new position %s" % str(self.position)
 
@@ -272,6 +264,28 @@ class Peg(drawable):
         glutSolidCylinder(self.radius, self.height, self.slices, self.stacks)
         glPopMatrix() #1
 
+    def contact(self, disc):
+        '''
+        Returns true if the disc is in contact with this peg
+        '''
+        distance = disc.position - self.position
+        if distance.length() < self.radius + disc.radius:
+            return True
+        else:
+            return False
+
+    def collide(self, disc, speed):
+        diffVector = disc.position - self.position
+        if diffVector.x == 0:
+            if random.choice((True, False)):
+                diffVector.x = .05
+            else:
+                diffVector.x = -.05
+            # bounces slow down disc a bit
+        disc.velocity += diffVector
+        return speed * .90
+
+
 class Wall(drawable):
     '''
     Wall of the gameboard.
@@ -289,6 +303,32 @@ class Wall(drawable):
         glScalef(self.width, self.height, self.depth)
         glutSolidCube(1)
         glPopMatrix() #1
+
+    def contact(self, disc):
+        '''
+        Returns true if the passed disc is in contact with this wall
+
+        Assumes that contact only occurs in the X axis
+        '''
+
+        if disc.position.y < (self.position.y + self.height) / 2 and \
+           disc.position.y > (self.position.y - self.height) / 2:
+            print "Y collision valid"
+            xDist = fabs(self.position.x - disc.position.x)
+            print "XDistance: %f, vs %f" % (xDist, disc.radius + self.width)
+            if xDist < disc.radius + self.width:
+                print "Wall collision"
+                return True
+        return False
+
+    def collide(self, disc, speed):
+        '''
+        Will touch the velocity of the disc
+        Just reflects the x component of the velocity. leaving the Y component the same
+        '''
+
+        disc.velocity.x = -disc.velocity.x
+        return speed * .9
 
 
 class PlinkoBoard(drawable):

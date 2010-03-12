@@ -295,6 +295,7 @@ def initializeObjects():
     #    obstacleList.append(peg)
     board = PlinkoBoard()
     obstacleList.extend(board.getPegs())
+    obstacleList.extend(board.getWalls())
     modelsList.append(board)
 
 
