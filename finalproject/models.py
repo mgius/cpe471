@@ -7,6 +7,8 @@ from OpenGL.GLU  import *
 from OpenGL.GL   import *
 from Vector3D.Vector3D import *
 
+from numpy import arange
+
 # Any materials I might need in a dictionary
 materials = { 
     'redflat': ( 
@@ -274,16 +276,31 @@ class PlinkoBoard(drawable):
     def __init__(self, position=Vector3D(), pegs=None):
         self.position=position
         if pegs == None:
-            self.pegs = self.generatePegs()
+            self.generatePegs()
         else:
             self.pegs = pegs
 
 
     def generatePegs(self):
-        return None
+        self.pegs = []
+        bottom = -5
+        top = 5
+        left = -5.0
+        right = 5.0
+        for row in range(bottom, top, 1):
+            if row % 2 == 0:
+                for col in arange(left - .25, right + .25, .5):
+                    self.pegs.append(Peg(position=Vector3D(col, row, 0)))
+            else:
+                 for col in arange(left, right, .5):
+                    self.pegs.append(Peg(position=Vector3D(col, row, 0)))
 
-    def draw():
+
+    def draw(self):
         # draw the flat board
         # draw the pegs
         for peg in self.pegs:
             peg.draw()
+
+    def getPegs(self):
+        return self.pegs

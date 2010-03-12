@@ -285,14 +285,17 @@ def display():
   
 def initializeObjects():
     global modelsList, discList, pegList
-    disc = PlinkoDisc(position=Vector3D(0,2,0))
-    modelsList.append(disc)
-    discList.append(disc)
+    #disc = PlinkoDisc(position=Vector3D(0,2,0))
+    #modelsList.append(disc)
+    #discList.append(disc)
 
-    for x in range(10):
-        peg = Peg(position=Vector3D(random.uniform(-3,3), random.uniform(-3,1), 0))
-        modelsList.append(peg)
-        pegList.append(peg)
+    #for x in range(10):
+    #    peg = Peg(position=Vector3D(random.uniform(-3,3), random.uniform(-3,1), 0))
+    #    modelsList.append(peg)
+    #    pegList.append(peg)
+    board = PlinkoBoard()
+    pegList.extend(board.getPegs())
+    modelsList.append(board)
 
 
 def timer(data):
