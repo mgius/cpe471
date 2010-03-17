@@ -311,7 +311,7 @@ def initializeObjects():
     modelsList.append(disc)
     discList.append(disc)
 
-    board = PlinkoBoard(position=Vector3D(0,1,3))
+    board = PlinkoBoard(position=Vector3D(0,2,3))
     obstacleList.extend(board.getPegs())
     obstacleList.extend(board.getWalls())
     modelsList.append(board)

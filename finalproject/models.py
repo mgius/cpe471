@@ -369,10 +369,12 @@ class PlinkoBoard(drawable):
 
     def generateWalls(self):
         height = fabs(self.bottom) + fabs(self.top)
-        middle = (self.bottom + self.top) / 2
+        middle = (self.bottom + self.top) / 2 + self.position.y
 
-        leftPos = Vector3D(self.left - 1.25, middle, self.position.z)
-        rightPos = Vector3D(self.right + .25, middle, self.position.z)
+        leftPos = Vector3D(self.left - 1.25 + self.position.x, \
+                           middle, self.position.z)
+        rightPos = Vector3D(self.right + .25 + self.position.x, \
+                            middle, self.position.z)
 
         leftWall = Wall(height=height, position=leftPos)
         rightWall = Wall(height=height, position=rightPos)
@@ -382,13 +384,17 @@ class PlinkoBoard(drawable):
     def generatePegs(self):
         self.pegs = []
         z = self.position.z
+        xOff = self.position.x
+        yOff = self.position.y
         for row in range(self.bottom, self.top):
             if row % 2 == 0:
                 for col in range(self.left - 1, self.right):
-                    self.pegs.append(Peg(position=Vector3D(col + .5, row, z)))
+                    self.pegs.append(Peg(position=Vector3D(col + .5 + xOff, \
+                                                           row + yOff, z)))
             else:
                  for col in range(self.left, self.right):
-                    self.pegs.append(Peg(position=Vector3D(col, row, z)))
+                    self.pegs.append(Peg(position=Vector3D(col + xOff, \
+                                                           row + yOff, z)))
 
 
     def draw(self):
