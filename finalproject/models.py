@@ -109,101 +109,13 @@ class drawable(object):
         '''
         return False
 
-
-class IceCream(drawable):
-    def draw(self):
-        glPushMatrix() #1
-        self.translate()
-        # Rotate the whole cone to be oriented in the negative X direction
-        glRotatef(90, 1, 0, 0)
-        setMaterial(materials['yellowflat'])
-        glutSolidCone(.5, 3, 10, 10)
-        glPushMatrix() #2
-        glTranslatef(0, 0, -.5)
-        setMaterial(materials['greenshiny'])
-        glutSolidSphere(.6, 10, 10)
-        glPopMatrix() #2
-        glPopMatrix() #1
-
-class SnowMan(drawable):
-    def draw(self):
-        glPushMatrix() #1
-        self.translate()
-        setMaterial(materials['blueflat'])
-        glutSolidSphere(1, 10, 10)
-        glPushMatrix() #2
-        # Move it bottom sphere and middle sphere, minus a bit
-        glTranslatef(0, 1.6, 0)
-        setMaterial(materials['blackflat'])
-        glutSolidSphere(.8, 10, 10)
-
-        glPushMatrix() #3
-        # Move it middle sphere and top sphere, minus a bit
-        glTranslatef(0, 1.1, 0)
-        setMaterial(materials['blueflat'])
-        glutSolidSphere(.5, 10, 10)
-        glPopMatrix() #3
-
-        glPopMatrix() #2
-
-        glPopMatrix() #1
-
-class Plane(drawable):
-    '''
-    Draws a large ground plane at the origin in the X plane
-    '''
-    def __init__(self, size=100, material='redflat'):
-        drawable.__init__(self)
-        self.size=size
-        self.material=material
-
-    def draw(self):
-        setMaterial(materials[self.material])
-        glBegin(GL_QUADS)
-        glVertex3f(-self.size, 0, -self.size)
-        glVertex3f(-self.size, 0,  self.size)
-        glVertex3f( self.size, 0,  self.size)
-        glVertex3f( self.size, 0, -self.size)
-        glEnd()
-
-class Axes(drawable):
-    '''
-    Draws a big set of XYZ axes at the origin
-    '''
-    def draw(self):
-        oldWidth = glGetFloatv( GL_LINE_WIDTH)
-        glLineWidth(5.0)
-
-        # X axis
-        glBegin(GL_LINES)
-        glColor3f(0.5, 0, 0)
-        glVertex3f(-50.0, 0, 0)
-        glVertex3f(50.0,0,0)
-        glEnd()
-
-        # Y axis
-        glBegin(GL_LINES)
-        glColor3f(0, 0.5, 0)
-        glVertex3f(0, -50.0, 0)
-        glVertex3f(0,50.0,0)
-        glEnd()
-
-        # Z axis
-        glBegin(GL_LINES)
-        glColor3f(0, 0, .5)
-        glVertex3f(0, 0, -50.0)
-        glVertex3f(0,0,50.0)
-        glEnd()
-
-        glLineWidth(oldWidth)
-
 class PlinkoDisc(drawable):
     '''
     Game Disc.  Dropped from the top of the board and falls to the bottom
 
     should eventually be a red disc with a dollar sign on it
     '''
-    radius = .40
+    radius = .35
     height = .1
     slices = 20
     stacks = 20
@@ -262,14 +174,14 @@ class Peg(drawable):
     '''
     Peg object.  The position of the peg should be relative to the board
     '''
-    radius = .05
+    radius = .10
     height = .1
     slices = 20
     stacks = 20
     def draw(self):
         glPushMatrix() #1
         self.translate()
-        setMaterial(materials['blueflat'])
+        setMaterial(materials['greenshiny'])
         glutSolidCylinder(self.radius, self.height, self.slices, self.stacks)
         glPopMatrix() #1
 
@@ -310,10 +222,16 @@ class Wall(drawable):
         glPushMatrix() #1
         self.translate()
         #print "%s" % str(self.position)
+        setMaterial(materials['blueflat'])
         glScalef(self.width, self.height, self.depth)
         glutSolidCube(1)
         glPopMatrix() #1
 
+
+class VWall(Wall):
+    '''
+    Vertical wall of the gameboard
+    '''
     def contact(self, disc):
         '''
         Returns true if the passed disc is in contact with this wall
@@ -323,11 +241,11 @@ class Wall(drawable):
 
         if disc.position.y < (self.position.y + self.height) / 2 and \
            disc.position.y > (self.position.y - self.height) / 2:
-            print "Y collision valid"
+            #print "Y collision valid"
             xDist = fabs(self.position.x - disc.position.x)
-            print "XDistance: %f, vs %f" % (xDist, disc.radius + self.width)
+            #print "XDistance: %f, vs %f" % (xDist, disc.radius + self.width)
             if xDist < disc.radius + self.width / 2:
-                print "Wall collision"
+                #print "Wall collision"
                 return True
         return False
 
@@ -340,13 +258,43 @@ class Wall(drawable):
         disc.velocity.x = -disc.velocity.x
         return speed * .9
 
+class HWall(Wall):
+    '''
+    Bottom Horizontal wall of the gameboard
+    '''
+    def contact(self, disc):
+        '''
+        Returns true if the passed disc is in contact with this wall
+
+        Assumes that contact only occurs in the Y axis
+        '''
+
+        if disc.position.x < (self.position.x + self.width) / 2 and \
+           disc.position.x > (self.position.x - self.width) / 2:
+            #print "Y collision valid"
+            yDist = fabs(self.position.y - disc.position.y)
+            #print "XDistance: %f, vs %f" % (xDist, disc.radius + self.width)
+            if yDist < disc.radius + self.height / 2:
+                #print "Wall collision"
+                return True
+        return False
+
+    def collide(self, disc, speed):
+        '''
+        Will touch the velocity of the disc
+        Just reflects the x component of the velocity. leaving the Y component the same
+        '''
+
+        disc.velocity.set(0,0,0)
+        return 0
+
 
 class PlinkoBoard(drawable):
     '''
     The gameboard.  Generates its own pattern of pegs and walls if not provided
     with one.
     '''
-    def __init__(self, position=Vector3D(), pegs=None, walls =None, \
+    def __init__(self, position=Vector3D(), pegs=None, walls=None, \
                  bottom = -5, top = 5, left = -3, right = 3):
         self.position=position
 
@@ -368,18 +316,24 @@ class PlinkoBoard(drawable):
 
 
     def generateWalls(self):
-        height = fabs(self.bottom) + fabs(self.top)
-        middle = (self.bottom + self.top) / 2 + self.position.y
+        height = self.top - self.bottom
+        ymiddle = (self.bottom + self.top) / 2 + self.position.y
+
+        width = self.right - self.left + 1.5
+        xmiddle = (self.left + self.right) / 2 + self.position.x -.5
 
         leftPos = Vector3D(self.left - 1.25 + self.position.x, \
-                           middle, self.position.z)
+                           ymiddle, self.position.z)
         rightPos = Vector3D(self.right + .25 + self.position.x, \
-                            middle, self.position.z)
+                            ymiddle, self.position.z)
 
-        leftWall = Wall(height=height, position=leftPos)
-        rightWall = Wall(height=height, position=rightPos)
+        bottomPos = Vector3D(xmiddle, self.bottom - .25, self.position.z)
 
-        self.walls = [leftWall, rightWall]
+        leftWall = VWall(height=height, position=leftPos)
+        rightWall = VWall(height=height, position=rightPos)
+        bottomWall = HWall(height = .5, width=width, position=bottomPos)
+
+        self.walls = [leftWall, rightWall, bottomWall]
 
     def generatePegs(self):
         self.pegs = []
