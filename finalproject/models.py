@@ -10,6 +10,9 @@ from Vector3D.Vector3D import *
 from math import fabs
 import random
 
+# set the frame per second
+fps = 60
+
 # Any materials I might need in a dictionary
 materials = { 
     'redflat': ( 
@@ -63,7 +66,8 @@ class drawable():
     The draw() function will draw assuming it is at 0,0,0, but you
     are welcome to translate before calling draw if you'd like.
     '''
-    grabbed = False
+    # start everything grabbed so that objects don't fall
+    grabbed = True
 
     #constructor
     def __init__(self, position=Vector3D()):
@@ -199,7 +203,7 @@ class PlinkoDisc(drawable):
 
     should eventually be a red disc with a dollar sign on it
     '''
-    radius = .20
+    radius = .40
     height = .1
     slices = 20
     stacks = 20
@@ -213,12 +217,12 @@ class PlinkoDisc(drawable):
 
     def gravity(self, obstacles):
         if not self.grabbed:
-            speed = .10
+            speed = .05
             for obstacle in obstacles:
                 if obstacle.contact(self):
                     speed = obstacle.collide(self, speed)
 
-            self.velocity += Vector3D(0, -.05, 0)
+            self.velocity += Vector3D(0, -.025, 0)
             self.velocity.normalize(speed)
             self.position += self.velocity
             #print "Disc new position %s" % str(self.position)
@@ -236,6 +240,7 @@ class PlinkoDisc(drawable):
 
     def release(self):
         self.grabbed = False
+        return True
 
     def contact(self, obstacle):
         '''
@@ -281,7 +286,7 @@ class Peg(drawable):
                 diffVector.x = .05
             else:
                 diffVector.x = -.05
-        diffVector.normalize(.75)
+        diffVector.normalize()
         disc.velocity += diffVector
         # bounces slow down disc a bit
         return speed * .90
@@ -300,7 +305,7 @@ class Wall(drawable):
     def draw(self):
         glPushMatrix() #1
         self.translate()
-        print "%s" % str(self.position)
+        #print "%s" % str(self.position)
         glScalef(self.width, self.height, self.depth)
         glutSolidCube(1)
         glPopMatrix() #1
@@ -362,8 +367,8 @@ class PlinkoBoard(drawable):
         height = fabs(self.bottom) + fabs(self.top)
         middle = (self.bottom + self.top) / 2
 
-        leftPos = Vector3D(self.left - 1, middle, 0)
-        rightPos = Vector3D(self.right, middle, 0)
+        leftPos = Vector3D(self.left - 1.25, middle, self.position.z)
+        rightPos = Vector3D(self.right + .25, middle, self.position.z)
 
         leftWall = Wall(height=height, position=leftPos)
         rightWall = Wall(height=height, position=rightPos)
@@ -372,13 +377,14 @@ class PlinkoBoard(drawable):
 
     def generatePegs(self):
         self.pegs = []
+        z = self.position.z
         for row in range(self.bottom, self.top):
             if row % 2 == 0:
                 for col in range(self.left - 1, self.right):
-                    self.pegs.append(Peg(position=Vector3D(col + .5, row, 0)))
+                    self.pegs.append(Peg(position=Vector3D(col + .5, row, z)))
             else:
                  for col in range(self.left, self.right):
-                    self.pegs.append(Peg(position=Vector3D(col, row, 0)))
+                    self.pegs.append(Peg(position=Vector3D(col, row, z)))
 
 
     def draw(self):

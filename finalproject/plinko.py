@@ -63,8 +63,9 @@ def pos_light():
 (lastMouseX, lastMouseY, lastMouseZ) = (0,0,0)
 (lastWorldX, lastWorldY, lastWorldZ) = (0,0,0)
 
+mode = True
 def keyboard(key, x, y):
-    global look, eye, phi, theta, modelsList, discList, obstacleList
+    global look, eye, phi, theta, modelsList, discList, obstacleList, mode
     scale_factor = .1
     
     zoom = look - eye
@@ -99,7 +100,16 @@ def keyboard(key, x, y):
         discList = []
         initializeObjects()
         glutPostRedisplay()
+    elif key == 'm' or key == 'm':
+        if mode:
+            glutMouseFunc( cameraMouse )
+            glutMotionFunc( cameraMouseMove )
+        else:
+            glutMouseFunc( plinkoMouse )
+            glutMotionFunc( plinkoMouseMove )
 
+        mode = not mode
+        
     elif key == 'q' or key == 'Q':
         exit(0)
 
@@ -292,21 +302,19 @@ def display():
   
 def initializeObjects():
     global modelsList, discList, obstacleList
-    disc = PlinkoDisc(position=Vector3D(0,1,8))
+
+    disc = PlinkoDisc(position=Vector3D(4,1,3))
     modelsList.append(disc)
     discList.append(disc)
-    disc = PlinkoDisc(position=Vector3D(0,1,7))
+        
+    disc = PlinkoDisc(position=Vector3D(4,2,3))
     modelsList.append(disc)
     discList.append(disc)
 
-    #for x in range(10):
-    #    peg = Peg(position=Vector3D(random.uniform(-3,3), random.uniform(-3,1), 0))
-    #    modelsList.append(peg)
-    #    obstacleList.append(peg)
-    #board = PlinkoBoard()
-    #obstacleList.extend(board.getPegs())
-    #obstacleList.extend(board.getWalls())
-    #modelsList.append(board)
+    board = PlinkoBoard(position=Vector3D(0,1,3))
+    obstacleList.extend(board.getPegs())
+    obstacleList.extend(board.getWalls())
+    modelsList.append(board)
 
 
 
@@ -314,7 +322,7 @@ def timer(data):
     if not reset:
         for disc in discList:
             disc.gravity(obstacleList)
-    #glutTimerFunc(data, timer, data)
+    glutTimerFunc(data, timer, data)
     glutPostRedisplay()
 
 glutInit(sys.argv)
