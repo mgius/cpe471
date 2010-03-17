@@ -281,8 +281,9 @@ class Peg(drawable):
                 diffVector.x = .05
             else:
                 diffVector.x = -.05
-            # bounces slow down disc a bit
+        diffVector.normalize(.75)
         disc.velocity += diffVector
+        # bounces slow down disc a bit
         return speed * .90
 
 
@@ -316,7 +317,7 @@ class Wall(drawable):
             print "Y collision valid"
             xDist = fabs(self.position.x - disc.position.x)
             print "XDistance: %f, vs %f" % (xDist, disc.radius + self.width)
-            if xDist < disc.radius + self.width:
+            if xDist < disc.radius + self.width / 2:
                 print "Wall collision"
                 return True
         return False
@@ -362,7 +363,7 @@ class PlinkoBoard(drawable):
         middle = (self.bottom + self.top) / 2
 
         leftPos = Vector3D(self.left - 1, middle, 0)
-        rightPos = Vector3D(self.right + 1, middle, 0)
+        rightPos = Vector3D(self.right, middle, 0)
 
         leftWall = Wall(height=height, position=leftPos)
         rightWall = Wall(height=height, position=rightPos)

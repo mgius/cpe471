@@ -12,6 +12,8 @@ import random
 
 import sys
 
+fps = 60
+
 # gotta be a better way of doing this
 reset = False
 
@@ -58,7 +60,8 @@ def pos_light():
 
 
 # input handling
-(lastMouseX, lastMouseY) = (0,0)
+(lastMouseX, lastMouseY, lastMouseZ) = (0,0,0)
+(lastWorldX, lastWorldY, lastWorldZ) = (0,0,0)
 
 def keyboard(key, x, y):
     global look, eye, phi, theta, modelsList, discList, obstacleList
@@ -116,7 +119,7 @@ def doPicking(x, y):
     # get values on the size of the viewport
     viewport = glGetInteger(GL_VIEWPORT)
     # allocate a select buffer long enough to hold 
-    glSelectBuffer(len(modelsList) + 3)
+    glSelectBuffer(len(modelsList) * 16)
     glRenderMode(GL_SELECT)
     glInitNames()
     # load a junk name
@@ -153,16 +156,18 @@ def doPicking(x, y):
     for hit_record in buffer:
         min_depth, max_depth, names = hit_record
         print "names:\n" 
+        names.reverse()
         for name in names:
             print "grabbing something\n"
             if modelsList[name].grab():
                 grabbed = modelsList[name]
+                break
 
 def plinkoMouse(button, state, x, y):
     '''
     Initial mouse click for plinko chip manipulation
     '''
-    global lastMouseX, lastMouseY, modelsList, GW, GH, grabbed
+    global lastWorldX, lastWorldY, lastWorldZ, lastMouseZ, modelsList, GW, GH, grabbed
     if button == GLUT_LEFT_BUTTON:
         if state == GLUT_DOWN:
             print "left mouse clicked at %d %d\n" % (x, y)
@@ -171,9 +176,15 @@ def plinkoMouse(button, state, x, y):
             #                      p2w_y(y, GH, GW)):
             #        thing.grab()
             #        grabbed = thing
-            lastMouseX = x
-            lastMouseY = y
             doPicking(x,y)
+            if grabbed != None:
+                # calculate winZ via the ganky method of Projecting :D
+                pos = grabbed.position
+                (winX,winY,winZ) = gluProject(pos.x, pos.y, pos.z)
+                print "clicked win %f, %f, %f" % (winX, winY, winZ)
+                lastMouseZ = winZ
+                (lastWorldX, lastWorldY, lastWorldZ) = gluUnProject(x,y,lastMouseZ)
+            print "clicked %f, %f, %f" % (lastWorldX, lastWorldY, lastWorldZ)
         if state == GLUT_UP:
             print "mouse released\n"
             if grabbed != None:
@@ -184,16 +195,15 @@ def plinkoMouseMove(x, y):
     '''
     Mouse movement for handling moving the plinko chips
     '''
-    global lastMouseX, lastMouseY, grabbed, GW, GH
+    global lastWorldX, lastWorldY, lastWorldZ, grabbed, GW, GH, lastMouseZ
     if grabbed != None:
-        xMove = p2w_x(lastMouseX, GH, GW) - p2w_x(x, GH, GW)
-        yMove = p2w_y(lastMouseY, GH, GW) - p2w_y(y, GH, GW)
-        back = 15.0
-        front = 1.0
-        zFactor = (back - grabbed.position.z) / (back - front)
-        grabbed.move(Vector3D(-xMove * zFactor , -yMove * zFactor, 0))
-        lastMouseX = x
-        lastMouseY = y
+        (worldX,worldY,worldZ) = gluUnProject(x,y,lastMouseZ)
+        xMove = lastWorldX - worldX 
+        yMove = lastWorldY - worldY
+        grabbed.move(Vector3D(xMove / 5 , -yMove / 5, 0))
+        lastWorldX = worldX
+        lastWorldY = worldY
+        lastWorldZ = worldZ
         glutPostRedisplay()
 
 def cameraMouse(button, state, x, y):
@@ -285,18 +295,21 @@ def display():
   
 def initializeObjects():
     global modelsList, discList, obstacleList
-    disc = PlinkoDisc(position=Vector3D(0,6,0))
+    disc = PlinkoDisc(position=Vector3D(0,1,8))
     modelsList.append(disc)
     discList.append(disc)
+    #disc = PlinkoDisc(position=Vector3D(0,1,7))
+    #modelsList.append(disc)
+    #discList.append(disc)
 
     #for x in range(10):
     #    peg = Peg(position=Vector3D(random.uniform(-3,3), random.uniform(-3,1), 0))
     #    modelsList.append(peg)
     #    obstacleList.append(peg)
-    board = PlinkoBoard()
-    obstacleList.extend(board.getPegs())
-    obstacleList.extend(board.getWalls())
-    modelsList.append(board)
+    #board = PlinkoBoard()
+    #obstacleList.extend(board.getPegs())
+    #obstacleList.extend(board.getWalls())
+    #modelsList.append(board)
 
 
 
@@ -304,14 +317,14 @@ def timer(data):
     if not reset:
         for disc in discList:
             disc.gravity(obstacleList)
-    glutTimerFunc(100, timer, 0)
+    #glutTimerFunc(data, timer, data)
     glutPostRedisplay()
 
 glutInit(sys.argv)
 glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
 glutInitWindowSize(300, 300); 
 glutInitWindowPosition(100, 100)
-glutCreateWindow("Program 4 in python")
+glutCreateWindow("Plinko")
 glClearColor(1.0, 1.0, 1.0, 1.0)
 
 glutDisplayFunc( display )
@@ -328,5 +341,6 @@ glEnable(GL_NORMALIZE)
 glEnable(GL_LIGHTING)
 
 initializeObjects()
-glutTimerFunc(100, timer, 0)
+print "Timer running every %d" % (1000 / fps)
+glutTimerFunc(1000 / fps, timer, 1000 / fps)
 glutMainLoop()
