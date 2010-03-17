@@ -86,7 +86,7 @@ class Vector3D():
     def __div__(self, mult):
         return Vector3D(self.x / mult, self.y / mult, self.z / mult)
 
-    def __idiv(self, mult):
+    def __idiv__(self, mult):
         self.x /= mult
         self.y /= mult
         self.z /= mult

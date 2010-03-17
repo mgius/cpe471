@@ -59,7 +59,7 @@ def setMaterial(material):
     glMaterial(GL_FRONT, GL_SHININESS, shininess)
 
 
-class drawable():
+class drawable(object):
     '''
     Anything that can be drawn onto an openGL canvas
 
@@ -67,11 +67,11 @@ class drawable():
     are welcome to translate before calling draw if you'd like.
     '''
     # start everything grabbed so that objects don't fall
-    grabbed = True
 
     #constructor
     def __init__(self, position=Vector3D()):
         self.position=position
+        self.grabbed = True
 
     def translate(self):
         '''
@@ -207,7 +207,11 @@ class PlinkoDisc(drawable):
     height = .1
     slices = 20
     stacks = 20
-    velocity = Vector3D()
+
+    def __init__(self, position=Vector3D()):
+        drawable.__init__(self, position=position)
+        self.velocity = Vector3D()
+
     def draw(self):
         glPushMatrix() #1
         self.translate()

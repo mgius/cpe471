@@ -303,9 +303,9 @@ def display():
 def initializeObjects():
     global modelsList, discList, obstacleList
 
-    disc = PlinkoDisc(position=Vector3D(4,1,3))
-    modelsList.append(disc)
-    discList.append(disc)
+    disc2 = PlinkoDisc(position=Vector3D(4,1,3))
+    modelsList.append(disc2)
+    discList.append(disc2)
         
     disc = PlinkoDisc(position=Vector3D(4,2,3))
     modelsList.append(disc)
