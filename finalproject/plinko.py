@@ -115,7 +115,7 @@ def doPicking(x, y):
     '''
     Determine which objects are in this clicking region
     '''
-    global eye, look, GW, GH, modelsList, grabbed
+    global eye, look, GW, GH, modelsList, grabbed, lastMouseZ
     # get values on the size of the viewport
     viewport = glGetInteger(GL_VIEWPORT)
     # allocate a select buffer long enough to hold 
@@ -155,13 +155,14 @@ def doPicking(x, y):
 
     for hit_record in buffer:
         min_depth, max_depth, names = hit_record
+        lastMouseZ = min_depth
+        print "min_depth: %f" % lastMouseZ
         print "names:\n" 
         names.reverse()
         for name in names:
-            print "grabbing something\n"
+            print "%s\n" % name
             if modelsList[name].grab():
                 grabbed = modelsList[name]
-                break
 
 def plinkoMouse(button, state, x, y):
     '''
@@ -179,10 +180,6 @@ def plinkoMouse(button, state, x, y):
             doPicking(x,y)
             if grabbed != None:
                 # calculate winZ via the ganky method of Projecting :D
-                pos = grabbed.position
-                (winX,winY,winZ) = gluProject(pos.x, pos.y, pos.z)
-                print "clicked win %f, %f, %f" % (winX, winY, winZ)
-                lastMouseZ = winZ
                 (lastWorldX, lastWorldY, lastWorldZ) = gluUnProject(x,y,lastMouseZ)
             print "clicked %f, %f, %f" % (lastWorldX, lastWorldY, lastWorldZ)
         if state == GLUT_UP:
@@ -200,7 +197,7 @@ def plinkoMouseMove(x, y):
         (worldX,worldY,worldZ) = gluUnProject(x,y,lastMouseZ)
         xMove = lastWorldX - worldX 
         yMove = lastWorldY - worldY
-        grabbed.move(Vector3D(xMove / 5 , -yMove / 5, 0))
+        grabbed.move(Vector3D(-xMove , yMove, 0))
         lastWorldX = worldX
         lastWorldY = worldY
         lastWorldZ = worldZ
@@ -298,9 +295,9 @@ def initializeObjects():
     disc = PlinkoDisc(position=Vector3D(0,1,8))
     modelsList.append(disc)
     discList.append(disc)
-    #disc = PlinkoDisc(position=Vector3D(0,1,7))
-    #modelsList.append(disc)
-    #discList.append(disc)
+    disc = PlinkoDisc(position=Vector3D(0,1,7))
+    modelsList.append(disc)
+    discList.append(disc)
 
     #for x in range(10):
     #    peg = Peg(position=Vector3D(random.uniform(-3,3), random.uniform(-3,1), 0))
