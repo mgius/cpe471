@@ -113,9 +113,9 @@ def keyboard(key, x, y):
     elif key == 'q' or key == 'Q':
         exit(0)
 
-    if eye.y < 1.0:
-        eye.y = 1.0
-        look.y = eye.y + sin(deg2rad(phi))
+    #if eye.y < 1.0:
+    #    eye.y = 1.0
+    #    look.y = eye.y + sin(deg2rad(phi))
 
     glutPostRedisplay()
 
