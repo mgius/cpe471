@@ -286,6 +286,7 @@ class HWall(Wall):
         '''
 
         disc.velocity.set(0,0,0)
+        disc.grabbed = True
         return 0
 
 
