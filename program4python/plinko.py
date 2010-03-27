@@ -101,24 +101,33 @@ def mouse(button, state, x, y):
             lastMouseX = x
             lastMouseY = y
 
+warped = False
 def mouseMove(x, y):
-    global theta, phi, look, lastMouseX, lastMouseY
-    rotate_scale = .5
+    global theta, phi, look, lastMouseX, lastMouseY, warped
+    if not warped:
+        rotate_scale = .5
 
-    theta -= rotate_scale * (lastMouseX - x)
-    phi += rotate_scale * (lastMouseY - y)
+        theta -= rotate_scale * (150 - x)
+        phi += rotate_scale * (150 - y)
 
-    phi = phi if phi < 50.0 else 50.0
-    phi = phi if phi > -50.0 else -50.0
-    theta = theta if theta > 360 else theta - 360.0
-    theta = theta if theta < 360 else theta + 360.0
+        phi = phi if phi < 50.0 else 50.0
+        phi = phi if phi > -50.0 else -50.0
+        theta = theta if theta > 360 else theta - 360.0
+        theta = theta if theta < 360 else theta + 360.0
 
-    look.x = eye.x + cos(deg2rad(phi)) * cos(deg2rad(theta))
-    look.y = eye.y + sin(deg2rad(phi))
-    look.z = eye.z + cos(deg2rad(phi)) * cos(90 - deg2rad(theta))
+        look.x = eye.x + cos(deg2rad(phi)) * cos(deg2rad(theta))
+        look.y = eye.y + sin(deg2rad(phi))
+        look.z = eye.z + cos(deg2rad(phi)) * cos(90 - deg2rad(theta))
 
-    lastMouseX = x
-    lastMouseY = y
+        lastMouseX = x
+        lastMouseY = y
+
+        glutWarpPointer(150, 150)
+        print "%d, %d" % (x, y)
+        warped = True
+    else:
+        warped = False
+
     glutPostRedisplay()
 
 # Display callbacks
@@ -178,7 +187,7 @@ glutDisplayFunc( display )
 glutReshapeFunc( reshape )
 glutKeyboardFunc( keyboard )
 glutMouseFunc( mouse )
-glutMotionFunc( mouseMove )
+glutPassiveMotionFunc( mouseMove )
 
 glEnable(GL_DEPTH_TEST)
 
@@ -186,4 +195,5 @@ init_lighting()
 
 glEnable(GL_NORMALIZE)
 glEnable(GL_LIGHTING)
+glutSetCursor(GLUT_CURSOR_NONE)
 glutMainLoop()
